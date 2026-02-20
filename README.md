@@ -1,5 +1,7 @@
 # 🎙️ Intelligent Auditor RAG
 
+![Build Status](https://github.com/pritmon/intelligent-auditor-rag/actions/workflows/ci.yml/badge.svg)
+
 > **Transforming complex financial filings into actionable insights with high-precision AI.**
 
 The **Intelligent Auditor** is a production-grade RAG (Retrieval-Augmented Generation) system designed to analyze 10-K, 10-Q, and other complex legal documents. It combines hybrid search, reranking, and rigorous evaluation to provide "grounded" answers that auditors can trust.
