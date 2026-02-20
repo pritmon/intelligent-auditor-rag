@@ -14,3 +14,4 @@ ragas
 datasets
 langchain
 langchain-openai
+pytest

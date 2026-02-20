@@ -4,30 +4,21 @@ import os
 # Add the project root to the python path
 sys.path.append(os.getcwd())
 
-print("Checking imports...")
-try:
-    from src.ingester import Ingester
-    from src.indexer import Indexer
-    from src.retriever import HybridRetriever
-    from src.reranker import Reranker
-    from src.generator import Generator
-    print("✅ All core components imported successfully!")
-except ImportError as e:
-    print(f"❌ Import failed: {e}")
-    sys.exit(1)
+def test_imports():
+    """Verify that all core components can be imported."""
+    from src.ingester import Ingester # noqa
+    from src.indexer import Indexer # noqa
+    from src.retriever import HybridRetriever # noqa
+    from src.reranker import Reranker # noqa
+    from src.generator import Generator # noqa
+    assert True
 
-print("\nChecking directory structure...")
-dirs = ["data/raw", "data/processed", "vector_store", "src", "prompts", "tests"]
-for d in dirs:
-    if os.path.isdir(d):
-        print(f"✅ {d}/ exists")
-    else:
-        print(f"❌ {d}/ is missing")
+def test_directory_structure():
+    """Verify that all required directories exist."""
+    dirs = ["data/raw", "data/processed", "vector_store", "src", "prompts", "tests"]
+    for d in dirs:
+        assert os.path.isdir(d), f"Directory {d}/ is missing"
 
-print("\nChecking prompt file...")
-if os.path.exists("prompts/system_prompt.yaml"):
-    print("✅ prompts/system_prompt.yaml exists")
-else:
-    print("❌ prompts/system_prompt.yaml is missing")
-
-print("\nSmoke test passed!")
+def test_prompt_file():
+    """Verify that the system prompt file exists."""
+    assert os.path.exists("prompts/system_prompt.yaml"), "prompts/system_prompt.yaml is missing"
