@@ -1,34 +1,54 @@
+# This is your Continuous Integration (CI) configuration file.
+# Think of it as a "Robotic Inspector" that automatically checks your code every time you upload it.
+
 name: Python CI
 
+# Step 1: Tell GitHub WHEN to run the robot.
 on:
   push:
+    # Run every time code is pushed to these specific branches.
     branches: [ "main", "master" ]
   pull_request:
+    # Run when someone wants to merge their code into your "main" branch.
     branches: [ "main", "master" ]
 
+# Step 2: Define WHAT the robot should do.
 jobs:
   build:
-
+    # The "Operating System" the robot will use. 
+    # ubuntu-latest is a virtual Linux computer running in GitHub's cloud.
     runs-on: ubuntu-latest
 
+    # Step 3: The step-by-step instructions for the robot.
     steps:
+    # A. Download your code from the GitHub repository onto this virtual machine.
     - uses: actions/checkout@v3
+
+    # B. Install Python on this virtual machine so it can run your files.
     - name: Set up Python 3.11
       uses: actions/setup-python@v4
       with:
         python-version: "3.11"
+
+    # C. Install the libraries your app needs (from your requirements.txt).
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install flake8
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    # D. Use "flake8" to scan your code for formatting errors or "messy" code.
+    # This ensures your code looks professional and follows Python standards.
     - name: Lint with flake8
       run: |
-        # stop the build if there are Python syntax errors or undefined names
+        # stop the build if there are critical errors (syntax errors, etc.)
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        # identify less critical "warnings" but don't stop the build.
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    # E. Run your "Smoke Tests" to make sure the app actually works.
+    # If the tests fail, the build will show a Red 'X' on GitHub.
     - name: Test with pytest
       run: |
-        # Run smoke tests
+        # Pytest will look for files starting with 'test_' and run them.
         pytest tests/smoke_test.py
