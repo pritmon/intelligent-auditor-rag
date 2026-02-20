@@ -102,6 +102,30 @@ We should use a "Container-as-a-Service" (CaaS) platform. They handle all the he
 You never put your `OPENAI_API_KEY` in the code.
 - **The Process**: In the Cloud Console (AWS/Render), you go to "Environment Variables" and paste your keys there safely.
 
+## 🛠️ The Production Journey: Troubleshooting & Fixes
+
+Engineering is often about solving small bugs that block big deployments. Here are the 5 real-world hurdles we overcame to make this app live:
+
+| Hurdle | Why it failed | The Professional Fix |
+| :--- | :--- | :--- |
+| **CI Typos** | Typing `setup-all` instead of `setup-python` in the CI manual. | Corrected the GitHub Action script to use the proper library. |
+| **Missing Dependencies** | Local tests worked, but the server didn't have `pytest`. | Added `pytest` to `requirements.txt` to ensure server installation. |
+| **Empty Folders** | Git ignored the `vector_store` folder because it was empty. | Used `.gitkeep` files and `git add -f` to force Git to track them. |
+| **Cold Start Crash** | App tried to load a search memory that didn't exist yet. | Updated `indexer.py` to handle empty states without crashing. |
+| **Docker CMD Syntax** | Typing `main.py:app` instead of `main:app` for the startup. | Fixed the `Dockerfile` command to use the correct module name. |
+
+---
+
+### 🎙️ Final Tip for Interview:
+If you are asked, *"What was the hardest part?"*, answer:
+> *"The hardest part was navigating the 'Cold Start' problem. Moving a RAG system to a clean server means the vector store is empty. I had to implement a robust startup logic that detects a missing index and allows the service to stay alive while waiting for the first data ingestion."*
+
+---
+
+### 🚀 Your Live App Link:
+**[View Live Swagger Documentation](https://intelligent-auditor-rag.onrender.com/docs)**
+*(Note: It may take 30-60 seconds to 'spin up' on the free tier).*
+
 ---
 
 ### 🎙️ How to use this for your interview:
