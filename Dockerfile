@@ -1,32 +1,34 @@
-# Use an official Python runtime as a parent image
+# PRO TIP: This is a Dockerfile. It is a "Recipe" to build a consistent computer for your app.
+
+# 1. Base Image: Use a lightweight version of Python 3.11.
 FROM python:3.11-slim
 
-# Set environment variables
+# 2. Environment Setup: Prevents Python from creating messy cache files (.pyc).
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV KMP_DUPLICATE_LIB_OK=TRUE
 
-# Set work directory
+# 3. Work Directory: Every command after this runs inside the "/app" folder.
 WORKDIR /app
 
-# Install system dependencies
+# 4. System Tools: Install low-level libraries needed for FAISS and high-performance search.
 RUN apt-get update && apt-get install -y \
     build-essential \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# 5. Dependencies: Copy requirements first to speed up future builds (caching).
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project files
+# 6. Source Code: Copy all your project files into the container.
 COPY . .
 
-# Create necessary directories
+# 7. Safety: Ensure all required folders exist.
 RUN mkdir -p data/raw data/processed vector_store artifacts
 
-# Expose port 8000 for FastAPI
+# 8. Communication: Tell the container to listen on port 8000.
 EXPOSE 8000
 
-# Command to run the application
+# 9. Startup: The command that runs when the container starts.
 CMD ["uvicorn", "main.py:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -17,7 +17,8 @@ In production, you can't just stare at the terminal.
 
 ## 3. Infrastructure: Ship Anywhere (Docker)
 "It works on my machine" isn't good enough for an engineer.
-- **The Solution:** **Dockerization**.
+- **The Solution:** **Containerization** using **Docker**.
+- **The Concept:** Think of Docker as a **Standardized Shipping Container**. Just as a ship doesn't care if a container has cars or clothes inside, a server doesn't care how complex your AI is—as long as it's in a Docker container, it will run exactly the same way on every machine.
 - **The Value:** The entire app, including the vector store and dependencies, is wrapped in a container. It can be deployed to AWS, GCP, or Azure in minutes with zero setup.
 
 ## 4. Scalability: High-Performance Search
