@@ -32,7 +32,25 @@ In production, you can't just stare at the terminal.
 
 ---
 
+## 🛠️ DevOps & Git Reference
+
+### Essential Git Commands
+1. **`git init`**: Initialize the local repository.
+2. **`git add .`**: Stage changes for commit.
+3. **`git commit -m "..."`**: Save changes with a message.
+4. **`git push origin main`**: Upload changes to GitHub.
+5. **`git add -f`**: Force-add files (used for `.gitkeep` files in ignored folders).
+
+### CI/CD Workflow Breakdown (GitHub Actions)
+Our `ci.yml` file acts as an automated quality gate:
+- **Environment Parity**: Sets up an exact copy of our Python environment on every push.
+- **Linting (`flake8`)**: Automatically checks for coding standard violations.
+- **Automated Testing (`pytest`)**: Runs smoke tests to ensure the app is functionally sound before deployment.
+
+---
+
 ### How to use this for your interview:
 1. **Show the Eval Report:** Run `tests/eval_ragas.py` and show the score (e.g., "Our Faithfulness score is 0.95").
 2. **Show the Trace:** Open LangSmith and click through a query to show the "Chain of Thought."
 3. **Run the API:** Show how FastAPI serves the model like a real web service.
+4. **Explain the CI/CD:** Point to the "Actions" tab on GitHub and explain how it prevents "broken" code from reaching production.
