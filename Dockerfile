@@ -31,4 +31,4 @@ RUN mkdir -p data/raw data/processed vector_store artifacts
 EXPOSE 8000
 
 # 9. Startup: The command that runs when the container starts.
-CMD ["uvicorn", "main.py:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
