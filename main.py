@@ -45,7 +45,11 @@ indexer = Indexer(storage_dir=VECTOR_STORE_PATH)
 generator = Generator()
 
 # Global variable to hold the search index in memory
-current_index = indexer.load_index()
+try:
+    current_index = indexer.load_index()
+except Exception as e:
+    logger.warning(f"Could not load index during startup: {e}. You will need to ingest data first.")
+    current_index = None
 
 # Data structure for the questions the user will ask
 class QueryRequest(BaseModel):

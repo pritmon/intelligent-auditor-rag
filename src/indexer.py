@@ -40,8 +40,15 @@ class Indexer:
         """
         Loads an existing index from the storage folder.
         """
-        if not os.path.exists(self.storage_dir) or not os.listdir(self.storage_dir):
+        # Ignore hidden files like .gitkeep
+        valid_files = [f for f in os.listdir(self.storage_dir) if not f.startswith(".")]
+        if not os.path.exists(self.storage_dir) or not valid_files:
             print("No existing index found. You need to create one first.")
+            return None
+            
+        # Check if essential FAISS files actually exist
+        if not any(f.endswith(".faiss") or f.endswith(".json") for f in valid_files):
+            print("No valid FAISS index files found. You need to create one first.")
             return None
             
         print(f"--- Loading Index from {self.storage_dir} ---")
