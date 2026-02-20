@@ -9,6 +9,7 @@ from src.retriever import HybridRetriever
 from src.reranker import Reranker
 from src.generator import Generator
 import logging
+import gc
 
 # Configure Logging
 logging.basicConfig(
@@ -64,16 +65,31 @@ async def ingest_documents():
     global current_index
     logger.info("🚀 Starting ingestion process...")
     try:
+        # 1. Load Documents
         docs = ingester.load_documents()
         if not docs:
             logger.warning("No documents found in data/raw")
             return {"message": "No documents found in data/raw"}
         
+        # 2. Create Chunks
         chunks = ingester.create_chunks(docs)
+        
+        # 3. Clean up raw documents to save RAM
+        del docs
+        gc.collect()
+        
+        # 4. Create Index
         current_index = indexer.create_index(chunks)
-        logger.info(f"✅ Successfully indexed {len(chunks)} chunks.")
-        return {"message": f"Successfully indexed {len(chunks)} chunks."}
+        
+        # 5. Final cleanup
+        num_chunks = len(chunks)
+        del chunks
+        gc.collect()
+        
+        logger.info(f"✅ Successfully indexed {num_chunks} chunks.")
+        return {"message": f"Successfully indexed {num_chunks} chunks."}
     except Exception as e:
+        logger.error(f"❌ Ingestion failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/ask")
