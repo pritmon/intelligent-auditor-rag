@@ -83,9 +83,31 @@ This proves that:
 
 ---
 
-### How to use this for your interview:
+## ☁️ Cloud Deployment Roadmap
+Since our app is **Dockerized**, we can deploy it to any major cloud provider in 3 simple steps:
+
+### 1. Push to a Registry
+We need to upload our Docker "Magic Tiffin" to a library where cloud servers can find it.
+- **Tools**: Docker Hub, AWS ECR, or Google Artifact Registry.
+- **Command**: `docker push your-username/auditor-app`
+
+### 2. Pick a Cloud Service
+We should use a "Container-as-a-Service" (CaaS) platform. They handle all the heavy lifting (scaling, security, hardware).
+- **AWS**: Use **AWS App Runner** or **ECS**.
+- **Google Cloud**: Use **Cloud Run** (very popular and cheap).
+- **Azure**: Use **Azure Container Instances**.
+- **Simple Choice**: **Render** or **Railway** (Great for portfolios).
+
+### 3. Connect Secrets
+You never put your `OPENAI_API_KEY` in the code.
+- **The Process**: In the Cloud Console (AWS/Render), you go to "Environment Variables" and paste your keys there safely.
+
+---
+
+### 🎙️ How to use this for your interview:
 1. **Show the Eval Report:** Run `tests/eval_ragas.py` and show the score (e.g., "Our Faithfulness score is 0.95").
 2. **Show the Trace:** Open LangSmith and click through a query to show the "Chain of Thought."
 3. **Run the API:** Show how FastAPI serves the model like a real web service.
 4. **Explain the CI/CD:** Point to the "Actions" tab on GitHub and explain how it prevents "broken" code from reaching production.
 5. **Run the Smoke Test:** If they ask "Is it working?", run the `pytest` command to show them the green passing tests.
+6. **Mention the Cloud**: Tell them: *"The app is fully Dockerized, so we could deploy it to **AWS App Runner** or **Google Cloud Run** in under 5 minutes using this container."*
