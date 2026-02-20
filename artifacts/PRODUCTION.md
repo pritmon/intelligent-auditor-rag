@@ -50,8 +50,42 @@ Our `ci.yml` file acts as an automated quality gate:
 
 ---
 
+## 🚦 Quick Start for Interviewers
+If you want to show the interviewer that the app is "running fine" on their laptop, give them these one-liners:
+
+### Option A: The Docker way (Quickest & Safest)
+```bash
+# 1. Build the magic tiffin
+docker build -t auditor-app .
+
+# 2. Run the smoke tests inside the container
+docker run auditor-app pytest tests/smoke_test.py
+```
+
+### Option B: The Local Python way
+```bash
+# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Run the smoke tests
+pytest tests/smoke_test.py
+```
+
+### ✅ What does a "Pass" look like?
+If everything is fine, they will see:
+`tests/smoke_test.py ... [100%]`
+`3 passed in 0.5s`
+
+This proves that:
+1. All **libraries** are installed.
+2. The **API keys** are ready.
+3. The **folder structure** is perfect.
+
+---
+
 ### How to use this for your interview:
 1. **Show the Eval Report:** Run `tests/eval_ragas.py` and show the score (e.g., "Our Faithfulness score is 0.95").
 2. **Show the Trace:** Open LangSmith and click through a query to show the "Chain of Thought."
 3. **Run the API:** Show how FastAPI serves the model like a real web service.
 4. **Explain the CI/CD:** Point to the "Actions" tab on GitHub and explain how it prevents "broken" code from reaching production.
+5. **Run the Smoke Test:** If they ask "Is it working?", run the `pytest` command to show them the green passing tests.
