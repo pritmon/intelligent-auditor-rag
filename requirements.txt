@@ -1,0 +1,16 @@
+llama-index
+llama-index-vector-stores-faiss
+llama-index-retrievers-bm25
+openai
+faiss-cpu
+fastapi
+uvicorn
+pyyaml
+pypdf
+python-dotenv
+sentence-transformers
+rank-bm25
+ragas
+datasets
+langchain
+langchain-openai
