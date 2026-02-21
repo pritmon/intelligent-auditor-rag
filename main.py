@@ -10,6 +10,7 @@ from src.reranker import Reranker
 from src.generator import Generator
 import logging
 import gc
+from llama_index.core import Settings
 
 # Configure Logging
 logging.basicConfig(
@@ -29,6 +30,14 @@ if os.environ.get("LANGCHAIN_TRACING_V2") == "true":
 
 # This is the main file that starts your "Intelligent Auditor" app.
 # It uses FastAPI, which allows other apps or websites to talk to this system.
+
+# Aggressive Memory Optimization for Free Tiers (512MB RAM)
+from llama_index.llms.openai import OpenAI
+from llama_index.embeddings.openai import OpenAIEmbedding
+
+Settings.llm = OpenAI(model="gpt-4o")
+Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small")
+Settings.chunk_size = 512  
 
 app = FastAPI(title="Intelligent Auditor RAG")
 

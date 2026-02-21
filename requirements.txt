@@ -2,13 +2,13 @@ llama-index
 llama-index-vector-stores-faiss
 llama-index-retrievers-bm25
 openai
-faiss-cpu
+llama-index-llms-openai
+llama-index-embeddings-openai
 fastapi
 uvicorn
 pyyaml
 pypdf
 python-dotenv
-sentence-transformers
 rank-bm25
 ragas
 datasets
