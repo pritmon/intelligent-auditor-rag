@@ -1,6 +1,7 @@
 # 🎙️ Intelligent Auditor RAG
 
 ![Build Status](https://github.com/pritmon/intelligent-auditor-rag/actions/workflows/ci.yml/badge.svg)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://intelligent-auditor-rag.onrender.com/docs)
 
 > **Transforming complex financial filings into actionable insights with high-precision AI.**
 
