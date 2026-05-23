@@ -12,7 +12,7 @@
 | 🟣 | [History & Inventors](#-history--inventors--q39--q44) | Q39 – Q44 |
 | 🔷 | [MLOps & Production](#-mlops--production--q45--q56) | Q45 – Q56 |
 | 🔴 | [Lessons from the Audit](#-lessons-from-the-audit--q57--q66) | Q57 – Q66 |
-| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q83) | Q67 – Q83 |
+| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q84) | Q67 – Q84 |
 
 ---
 
@@ -914,7 +914,7 @@
 
 ---
 
-## 🟡 Deployment & Infrastructure — Q67 – Q83
+## 🟡 Deployment & Infrastructure — Q67 – Q84
 
 ---
 
@@ -1376,3 +1376,86 @@
 >
 > **Interview answer when asked about evaluation:**
 > > *"I used RAGAS — an industry-standard framework that uses GPT to automatically score faithfulness, answer relevance, and context precision. Faithfulness was 0.94, meaning 94% of facts in the answer were directly supported by the source document."*
+
+---
+
+### 🟡 Q84 — How does the anti-hallucination actually work in the code? Where is it written?
+
+> 💡 **It lives in one YAML file. Ten words. GPT reads them and obeys.**
+>
+> The anti-hallucination is not a complex algorithm — it is a strict instruction written in plain English inside `prompts/system_prompt.yaml`:
+>
+> ```yaml
+> 4. **No Hallucinations:** Do not use your internal knowledge about
+>    the company; use only the context window.
+> ```
+>
+> That one line travels all the way to GPT every single time a question is asked.
+>
+> ---
+>
+> **The full journey — from YAML file to GPT:**
+>
+> **Step 1 — Load the YAML** (`src/generator.py`)
+> ```python
+> with open("prompts/system_prompt.yaml") as f:
+>     prompt_data = yaml.safe_load(f)
+> self.system_prompt_template = prompt_data.get('system_prompt')
+> ```
+> The whole YAML — rules, structure, instructions — is loaded into memory at startup.
+>
+> **Step 2 — Inject the chunks and the question**
+> ```python
+> full_prompt = (
+>     self.system_prompt_template
+>     .replace("{context_str}", context_str)   # ← 3 PDF chunks go here
+>     .replace("{query_str}", query)            # ← user's question goes here
+> )
+> ```
+> The `{context_str}` placeholder gets replaced with the actual text retrieved from the PDF. The `{query_str}` placeholder gets replaced with what the user typed.
+>
+> **Step 3 — Send to GPT**
+> ```python
+> messages=[
+>     {"role": "system", "content": "You are a precise financial auditor."},
+>     {"role": "user",   "content": full_prompt}
+> ]
+> ```
+> GPT receives: your rules + the 3 PDF chunks + the user's question — all in one message.
+>
+> ---
+>
+> **Analogy — open book exam with strict rules:**
+>
+> Imagine giving a student an exam and saying:
+> > *"You may ONLY write answers from this one page I gave you. If it is not on this page, write 'not available'. Do not use your memory."*
+>
+> That is exactly what the system prompt does. GPT is very good at following instructions — so it stays within the boundary.
+>
+> When the user asked **"Who is the CEO of Tesla?"** and the chunks had no CEO name, GPT said:
+> > *"The provided documents do not contain information regarding the CEO of Tesla."*
+>
+> It did not guess "Elon Musk" — even though it knows that from training. The instruction stopped it.
+>
+> ---
+>
+> **What prevents GPT from cheating?**
+>
+> Nothing technical. There is no lock or filter. It is pure **instruction-following**.
+> GPT is trained to follow system instructions very carefully. The phrase `"use only the context window"` is enough.
+>
+> This is why the **system prompt is the most important file in a RAG system**. A weak prompt = hallucinations. A strict, clear prompt = grounded answers.
+>
+> ---
+>
+> **Summary table:**
+>
+> | Mechanism | What it does | Where it lives |
+> |---|---|---|
+> | `system_prompt.yaml` rule 4 | Tells GPT: only use what I gave you | `prompts/system_prompt.yaml` line 14 |
+> | `{context_str}` placeholder | Injects the 3 retrieved PDF chunks | `src/generator.py` line 46 |
+> | `temperature=0.0` | Turns off creativity — forces factual output | `src/generator.py` line 52 |
+> | Citation rule | Every fact must cite a page number — makes lies harder | `prompts/system_prompt.yaml` rule 2 |
+>
+> **Interview answer:**
+> > *"Anti-hallucination is enforced through the system prompt in `system_prompt.yaml`. GPT is told to answer only from the retrieved chunks — not from its own training knowledge. Combined with temperature 0 and mandatory page citations, this makes it very hard for the model to fabricate facts."*
