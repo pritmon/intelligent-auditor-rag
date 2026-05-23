@@ -450,6 +450,11 @@ def home():
         <button id="askBtn" class="ask-btn" onclick="askQuestion()">Ask →</button>
       </div>
 
+      <div id="responseBox" class="response-box">
+        <div class="response-label">Answer</div>
+        <div id="responseText" class="response-text"></div>
+      </div>
+
     </div>
 
     <div class="stats">
@@ -466,13 +471,6 @@ def home():
         <div class="stat-label">Context Precision</div>
       </div>
     </div>
-  </div>
-</div>
-
-<div class="demo-wrap">
-  <div id="responseBox" class="response-box">
-    <div class="response-label">Answer</div>
-    <div id="responseText" class="response-text"></div>
   </div>
 </div>
 
@@ -558,6 +556,7 @@ def home():
         .replace(/\\n/g, '\n')
         .replace(/\n/g, '<br/>');
       text.innerHTML = formatted;
+      box.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (e) {
       text.innerHTML = '<span class="error-text">⚠ Could not reach the server. Please try again.</span>';
     } finally {
