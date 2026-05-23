@@ -5,7 +5,7 @@
 ### Turn any financial filing into instant, cited answers — in seconds.
 
 [![CI](https://github.com/pritmon/intelligent-auditor-rag/actions/workflows/ci.yml/badge.svg)](https://github.com/pritmon/intelligent-auditor-rag/actions)
-[![Live Demo](https://img.shields.io/badge/🚀%20Live-Demo-brightgreen)](https://intelligent-auditor-rag.onrender.com/docs)
+[![Live Demo](https://img.shields.io/badge/🚀%20Live-Demo-brightgreen)](https://intelligent-auditor-rag.onrender.com)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?logo=openai&logoColor=white)](https://openai.com)
@@ -31,11 +31,12 @@ It doesn't guess. It only answers from what's in the document.
 
 ## 🚀 Live Demo
 
-The API is live. Try it now — no setup required:
+The app is live. Try it now — no setup required:
 
-**[→ Open Interactive API Docs](https://intelligent-auditor-rag.onrender.com/docs)**
+**[→ Open Live Demo](https://intelligent-auditor-rag.onrender.com)**
 
-Send a `POST /ask` with any question about the pre-loaded Tesla annual report.
+Type any question about the pre-loaded Tesla annual report and get a cited answer in seconds.
+API docs are also available at **[/docs](https://intelligent-auditor-rag.onrender.com/docs)**.
 
 ---
 
