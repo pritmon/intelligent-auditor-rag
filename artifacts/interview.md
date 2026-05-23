@@ -12,7 +12,7 @@
 | 🟣 | [History & Inventors](#-history--inventors--q39--q44) | Q39 – Q44 |
 | 🔷 | [MLOps & Production](#-mlops--production--q45--q56) | Q45 – Q56 |
 | 🔴 | [Lessons from the Audit](#-lessons-from-the-audit--q57--q66) | Q57 – Q66 |
-| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q84) | Q67 – Q84 |
+| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q87) | Q67 – Q87 |
 
 ---
 
@@ -914,7 +914,7 @@
 
 ---
 
-## 🟡 Deployment & Infrastructure — Q67 – Q84
+## 🟡 Deployment & Infrastructure — Q67 – Q87
 
 ---
 
@@ -1459,3 +1459,216 @@
 >
 > **Interview answer:**
 > > *"Anti-hallucination is enforced through the system prompt in `system_prompt.yaml`. GPT is told to answer only from the retrieved chunks — not from its own training knowledge. Combined with temperature 0 and mandatory page citations, this makes it very hard for the model to fabricate facts."*
+
+---
+
+### 🟡 Q85 — If you had to build this entire project from scratch alone, what is the full approach?
+
+> 💡 **Think of it like building a house — foundation first, walls second, paint last. Never the other way around.**
+>
+> There are 7 phases. Each phase must be completed before the next begins.
+>
+> ---
+>
+> **Phase 1 — Requirements (Day 1)**
+>
+> Before writing a single line of code, answer three questions:
+>
+> | Question | Answer for this project |
+> |---|---|
+> Who uses it? | Analysts and auditors who read financial PDFs |
+> What is the pain? | Manually reading 200-page reports takes days |
+> What is the output? | A cited answer in under 3 seconds |
+>
+> Then write **user stories** — one sentence per feature:
+> > *"As an analyst, I want to upload a PDF and ask a question so that I get a precise answer with a page citation."*
+>
+> Also decide **constraints** upfront: max PDF size, response time target, authentication needed?
+>
+> ---
+>
+> **Phase 2 — Architecture Design (Day 2)**
+>
+> Draw the pipeline on paper **before opening your code editor:**
+>
+> ```
+> PDF → Chunks → Embeddings → FAISS Index
+>                                   ↓
+> Question → Vector Search ──→ RRF Fusion → Reranker → GPT → Answer
+>          → BM25 Search ───↗
+> ```
+>
+> Then pick the tech stack — one tool per job:
+>
+> | Need | Choice | Why |
+> |---|---|---|
+> | API | FastAPI | Async, fast, auto-generated docs |
+> | RAG engine | LlamaIndex | Handles chunking + retrieval |
+> | Vector DB | FAISS | Local, no extra service to run |
+> | LLM | GPT-4o-mini | Cheap and accurate enough |
+> | Container | Docker | Runs the same everywhere |
+>
+> ---
+>
+> **Phase 3 — Development (Days 3–7)**
+>
+> Build in pipeline order — each file feeds the next. **Test each file alone before connecting it.**
+>
+> ```
+> Step 1 → ingester.py   — load PDF, split into overlapping chunks
+> Step 2 → indexer.py    — build FAISS vector index, save to disk
+> Step 3 → retriever.py  — vector search + BM25 + RRF fusion
+> Step 4 → reranker.py   — LLM picks the best 3 chunks
+> Step 5 → generator.py  — build prompt + call GPT
+> Step 6 → main.py       — wire everything into FastAPI endpoints
+> ```
+>
+> **Golden rule:** never wire two untested pieces together. A print statement confirming each step works is enough before moving on.
+>
+> ---
+>
+> **Phase 4 — Testing / UAT (Days 8–9)**
+>
+> Three levels of testing, in order:
+>
+> 1. **Smoke tests** — does everything import without crashing? (`tests/smoke_test.py`)
+> 2. **Integration test** — does a real question return a real answer? (`curl /ask`)
+> 3. **Quality test** — is the answer actually good? (RAGAS scores)
+>
+> UAT sign-off criteria used in this project:
+>
+> | Metric | Minimum required | Actual result |
+> |---|:---:|:---:|
+> | Faithfulness | ≥ 0.90 | ✅ 0.94 |
+> | Answer Relevance | ≥ 0.90 | ✅ 0.92 |
+> | Context Precision | ≥ 0.85 | ✅ 0.89 |
+> | Response time | < 10 seconds | ✅ ~8s |
+> | Crash on empty input | Must not crash | ✅ Validated |
+>
+> ---
+>
+> **Phase 5 — Security Audit (Day 10)**
+>
+> Before any real user touches it, check for:
+> - Hardcoded secrets → move to `.env`
+> - No input validation → add Pydantic max length
+> - Error messages showing internal details → catch exceptions, return generic message
+> - Race conditions on shared state → `asyncio.Lock`
+> - Prompt injection → use `.replace()` not `.format()`
+>
+> This project had **28 issues** found at this stage — better here than in production.
+>
+> ---
+>
+> **Phase 6 — Production Deployment (Day 11)**
+>
+> ```
+> Local dev → Docker build → Push to GitHub → Render auto-deploys
+> ```
+>
+> Pre-launch checklist:
+> - All dependencies pinned in `requirements.txt`
+> - `Procfile` reads `$PORT` from environment (not hardcoded)
+> - All secrets set in Render dashboard — never committed to git
+> - `GET /` health check returns 200
+> - CI pipeline runs lint + smoke test on every push
+>
+> ---
+>
+> **Phase 7 — Post-Production (ongoing)**
+>
+> - **Monitor:** LangSmith traces every GPT call, server logs catch errors
+> - **Iterate:** swap better PDFs, tune chunk size, improve the system prompt
+>
+> ---
+>
+> **Total timeline for one developer:**
+>
+> | Phase | Time |
+> |---|---|
+> | Requirements | 1 day |
+> | Architecture design | 1 day |
+> | Development (6 files) | 4–5 days |
+> | Testing + RAGAS | 1–2 days |
+> | Security audit + fixes | 1–2 days |
+> | Docker + deployment | 1 day |
+> | **Total** | **~2 weeks** |
+>
+> **Interview answer:**
+> > *"I followed a 7-phase approach: requirements, architecture design, development in pipeline order, UAT with RAGAS quality scoring, a security audit that found 28 issues, Docker deployment, and post-launch monitoring with LangSmith. The key principle was to build and test each component in isolation before connecting them."*
+
+---
+
+### 🟡 Q86 — Why do you build the pipeline components in that specific order?
+
+> 💡 **Because each step depends on the output of the previous one — like an assembly line. You cannot package a product that hasn't been made yet.**
+>
+> Here is why the order matters:
+>
+> | Step | Why it must come before the next |
+> |---|---|
+> | `ingester.py` first | Everything else needs chunks — no chunks, nothing works |
+> | `indexer.py` second | Retriever needs a built index to search |
+> | `retriever.py` third | Reranker needs retrieved results to rerank |
+> | `reranker.py` fourth | Generator needs the top 3 chunks to build the prompt |
+> | `generator.py` fifth | FastAPI needs a working generator to expose via API |
+> | `main.py` last | Wires everything together — only possible once all parts work |
+>
+> **The analogy:** imagine building a car.
+> - You build the engine first (ingester + indexer)
+> - Then the transmission (retriever)
+> - Then the gearbox (reranker)
+> - Then the dashboard controls (generator)
+> - Then you put the body on last (main.py / FastAPI)
+>
+> If you build the body first and the engine last, you will spend days dismantling the body every time the engine design changes.
+>
+> **The mistake beginners make:**
+> Starting with `main.py` — building the API before any of the underlying components work. This leads to wiring together untested parts and spending hours debugging which layer broke.
+>
+> **Interview answer:**
+> > *"I built the pipeline in data-flow order — ingester first, then indexer, retriever, reranker, generator, and finally the FastAPI wrapper. Each component was tested in isolation before being connected. This meant that when something broke, I always knew exactly which layer caused it."*
+
+---
+
+### 🟡 Q87 — What is the difference between Dev, UAT, and Prod environments?
+
+> 💡 **Three separate stages — each with a different purpose and a different audience.**
+>
+> | Environment | Who uses it | Purpose | What happens here |
+> |---|---|---|---|
+> | **Dev** | The developer only | Build and break things fast | Write code, run quick tests, crash freely |
+> | **UAT** | The developer + a test user | Verify it works correctly | Run quality checks, fix bugs before real users see it |
+> | **Prod** | Real users | Serve live traffic | Must be stable, secure, monitored |
+>
+> ---
+>
+> **In this project specifically:**
+>
+> **Dev** — local machine
+> ```bash
+> python3 main.py           # runs on localhost:8000
+> python3 run_ingestion.py  # builds the index locally
+> ```
+> Free to experiment, break things, add print statements.
+>
+> **UAT** — still local, but running formal checks
+> ```bash
+> pytest tests/smoke_test.py        # does it import without crash?
+> python3 tests/eval_ragas.py       # are the quality scores good enough?
+> curl localhost:8000/ask -d '...'  # does a real question get a real answer?
+> ```
+> Only move to production when all UAT criteria pass.
+>
+> **Prod** — Render cloud
+> ```
+> GitHub push → CI runs → Render deploys → Live at intelligent-auditor-rag.onrender.com
+> ```
+> No debug prints. No test data. Real API key. Monitored with LangSmith.
+>
+> ---
+>
+> **The key rule:** never skip UAT. Every real production bug in this project (port hardcoding, OOM crash, missing index files, JavaScript syntax error) was the result of deploying before fully verifying the previous step.
+>
+> **Interview answer:**
+> > *"Dev is where you build, UAT is where you verify quality against defined criteria, and Prod is where real users are. I used RAGAS scores as my UAT pass/fail gate — the system only went to production once faithfulness exceeded 0.90."*
