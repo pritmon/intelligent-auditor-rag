@@ -557,8 +557,8 @@ def home():
 
       const formatted = data.answer
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\\n/g, '\n')
-        .replace(/\n/g, '<br/>');
+        .replace(/\\\\n/g, '<br/>')
+        .replace(/\\n/g, '<br/>');
       text.innerHTML = formatted;
       box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } catch (e) {
