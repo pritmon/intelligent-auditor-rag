@@ -3,13 +3,7 @@ venv/
 __pycache__/
 *.pyc
 
-# LOW-7: wildcard plus negation keeps the directory marker in git
-# so that `git clone` produces the expected directory structure.
-data/raw/*
-!data/raw/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
-vector_store/*
-!vector_store/.gitkeep
 
 .DS_Store
