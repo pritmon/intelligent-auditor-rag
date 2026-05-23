@@ -752,7 +752,7 @@
 
 ---
 
-## 🟡 Deployment & Infrastructure — Q67 – Q70
+## 🟡 Deployment & Infrastructure — Q67 – Q77
 
 ---
 
