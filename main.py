@@ -533,8 +533,9 @@ def home():
 
     btn.disabled = true;
     btn.textContent = 'Thinking…';
-    box.classList.add('visible');
+    box.style.display = 'block';
     text.innerHTML = '<span class="spinner"></span>&nbsp; Searching and generating answer…';
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
     try {
       const res = await fetch('/ask', {
@@ -543,20 +544,19 @@ def home():
         body: JSON.stringify({ query })
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        text.innerHTML = '<span class="error-text">⚠ ' + (err.detail || 'Something went wrong. Please try again.') + '</span>';
+        text.innerHTML = '<span class="error-text">⚠ ' + (data.detail || 'Something went wrong. Please try again.') + '</span>';
         return;
       }
 
-      const data = await res.json();
-      // Format the answer — convert **bold** markers and newlines
       const formatted = data.answer
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\\n/g, '\n')
         .replace(/\n/g, '<br/>');
       text.innerHTML = formatted;
-      box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } catch (e) {
       text.innerHTML = '<span class="error-text">⚠ Could not reach the server. Please try again.</span>';
     } finally {
