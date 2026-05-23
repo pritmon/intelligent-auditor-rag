@@ -12,7 +12,7 @@
 | 🟣 | [History & Inventors](#-history--inventors--q39--q44) | Q39 – Q44 |
 | 🔷 | [MLOps & Production](#-mlops--production--q45--q56) | Q45 – Q56 |
 | 🔴 | [Lessons from the Audit](#-lessons-from-the-audit--q57--q66) | Q57 – Q66 |
-| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q73) | Q67 – Q73 |
+| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q74) | Q67 – Q74 |
 
 ---
 
@@ -906,3 +906,32 @@
 >
 > **The lesson:** Installing an unused library is not neutral — it wastes memory, slows builds, and can crash production.
 > Always verify: *"Does the code actually use this?"* before adding a dependency.
+
+---
+
+### 🟡 Q74 — What does this entire situation teach about fixing code?
+
+> 💡 **Every fix can create a new problem. A fix that isn't verified is just a new risk wearing a different coat.**
+>
+> The original app had 28 issues. All were fixed. But during the fixes, one wrong line was added — `sentence-transformers` in requirements.txt — which crashed every deployment for hours.
+>
+> **The chain of mistakes:**
+> ```
+> Audit found: "docs mention sentence-transformers but it's not installed"
+>      ↓
+> Fix: added it to requirements.txt
+>      ↓
+> Problem: app uses LLMRerank, not SentenceTransformerRerank
+>      ↓
+> Result: 200MB library installed and never called once
+>      ↓
+> Consequence: OOM crash on every deploy
+> ```
+>
+> **What this teaches:**
+>
+> - **Read the code, not the docs** — the docs said one thing, the code did another. Always trust the code
+> - **Every dependency has a cost** — installing a library feels free. It isn't. It costs memory, build time, and security surface
+> - **Audit findings are not always real problems** — just because something is *missing* doesn't mean it's *needed*
+> - **Test in production-like conditions** — the fix worked on a laptop with 16GB RAM, failed on a server with 512MB
+> - **The person fixing can also be the person breaking** — auditors, developers, reviewers all make mistakes. No one is above causing a bug while fixing another
