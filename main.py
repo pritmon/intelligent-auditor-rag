@@ -256,7 +256,6 @@ def home():
       background: #0f172a;
       border: 1px solid #1e293b;
       border-radius: 20px;
-      overflow: hidden;
       box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(59,130,246,0.05);
     }
     .demo-header {
