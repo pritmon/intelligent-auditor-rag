@@ -12,7 +12,7 @@
 | 🟣 | [History & Inventors](#-history--inventors--q39--q44) | Q39 – Q44 |
 | 🔷 | [MLOps & Production](#-mlops--production--q45--q56) | Q45 – Q56 |
 | 🔴 | [Lessons from the Audit](#-lessons-from-the-audit--q57--q66) | Q57 – Q66 |
-| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q70) | Q67 – Q70 |
+| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q73) | Q67 – Q73 |
 
 ---
 
@@ -850,3 +850,59 @@
 > **Why `0.0.0.0` matters:** If you bind to `127.0.0.1` (localhost), the app only accepts connections from the same machine. On a cloud server, external traffic comes from outside — it needs `0.0.0.0` to be reachable.
 >
 > **Procfile is used by:** Render, Railway, Heroku, and most modern cloud platforms.
+
+---
+
+### 🟡 Q71 — What does "Exited with status 137" mean?
+
+> 💡 **The server ran out of memory and killed your app — like a phone freezing when too many apps are open.**
+>
+> - Status 137 = the operating system sent a SIGKILL signal (force-quit)
+> - This almost always means **Out of Memory (OOM)** — the app tried to use more RAM than the server had available
+> - Render's free tier gives **512MB of RAM**. Your app loads heavy ML libraries that together exceed this limit
+>
+> | Library | Approximate Memory |
+> |---|---|
+> | LlamaIndex | ~150MB |
+> | FAISS (vector store) | ~100MB |
+> | sentence-transformers | ~200MB |
+> | OpenAI + FastAPI | ~50MB |
+> | **Total** | **~500MB+ (too tight)** |
+>
+> The app starts loading, hits the memory limit, and gets killed before it can bind to a port — so Render also reports "No open ports detected."
+
+---
+
+### 🟡 Q72 — What is the difference between LLMRerank and SentenceTransformerRerank?
+
+> 💡 **One asks OpenAI to judge — the other downloads a judge to your own server.**
+>
+> Both do the same job: look at retrieved chunks and pick the most relevant ones.
+>
+> | | **LLMRerank** | **SentenceTransformerRerank** |
+> |---|---|---|
+> | How it works | Sends chunks to OpenAI API | Downloads an AI model to your server |
+> | Memory needed | Almost none — just an API call | ~200MB just to load the model |
+> | Cost | Small OpenAI API charge per query | Free after download |
+> | Speed | Depends on OpenAI response time | Fast — runs locally |
+> | Best for | Low-memory servers, demos | High-traffic production with budget for a bigger server |
+>
+> **This project uses LLMRerank** — OpenAI does the reranking work, nothing heavy runs on your server.
+
+---
+
+### 🟡 Q73 — Why was sentence-transformers installed if it was never used?
+
+> 💡 **A mistake made during the audit — installing what the docs mentioned instead of what the code actually used.**
+>
+> During the audit, MED-11 noted:
+> *"The architecture description mentioned SentenceTransformerRerank as a recommended reranker, but sentence-transformers was not installed."*
+>
+> So it was added to `requirements.txt` to match the documentation.
+>
+> **The mistake:** The audit should have checked whether the code *actually calls* it — not just whether the docs mentioned it. The code uses `LLMRerank`, not `SentenceTransformerRerank`.
+>
+> **The consequence:** Render downloaded and installed a 200MB library on every deploy that was never called once. This pushed memory over the 512MB free tier limit and killed the app.
+>
+> **The lesson:** Installing an unused library is not neutral — it wastes memory, slows builds, and can crash production.
+> Always verify: *"Does the code actually use this?"* before adding a dependency.
