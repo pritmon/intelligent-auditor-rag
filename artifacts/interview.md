@@ -12,6 +12,7 @@
 | 🟣 | [History & Inventors](#-history--inventors--q39--q44) | Q39 – Q44 |
 | 🔷 | [MLOps & Production](#-mlops--production--q45--q56) | Q45 – Q56 |
 | 🔴 | [Lessons from the Audit](#-lessons-from-the-audit--q57--q66) | Q57 – Q66 |
+| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q70) | Q67 – Q70 |
 
 ---
 
@@ -748,3 +749,104 @@
 > **The lesson: always test what actually *happens*, not just that nothing *crashes*.**
 > Write tests for failure cases, not just the happy path.
 > **A system that fails silently is more dangerous than one that fails loudly.**
+
+---
+
+## 🟡 Deployment & Infrastructure — Q67 – Q70
+
+---
+
+### 🟡 Q67 — What is Kubernetes?
+
+> 💡 **A head office that manages hundreds of restaurant branches — automatically.**
+>
+> Imagine you own 50 restaurant branches. You don't manage each one manually — you have a head office that:
+> - Opens a new branch if one burns down
+> - Opens extra branches during lunch rush, closes them at night
+> - Makes sure every branch follows the same recipe
+>
+> Kubernetes does exactly this — but for your software running on servers.
+>
+> | Problem | What Kubernetes does |
+> |---|---|
+> | Your app crashes | Automatically restarts it |
+> | Traffic suddenly doubles | Spins up 10 more copies of your app |
+> | Traffic drops at night | Shuts down extras to save money |
+> | You push a new version | Swaps old → new with zero downtime |
+> | One server dies | Moves your app to a healthy server |
+>
+> **Why big companies use it:** Google handles billions of requests per day. No human can restart servers fast enough. Kubernetes does it 24/7, automatically.
+>
+> **Your project vs Kubernetes:** Your app runs on one server on Render. If it crashes, it's down. With Kubernetes, 10 copies run across many servers — one crashes, the other 9 keep going.
+
+---
+
+### 🟡 Q68 — Who invented Kubernetes and did they get rich?
+
+> 💡 **Three Google engineers who gave away their secret — then made $550 million from the services around it.**
+>
+> **The creators (built it at Google in 2013–2014):**
+> - **Joe Beda**, **Brendan Burns**, **Craig McLuckie**
+>
+> **The backstory:**
+> - Google had secretly been running an internal system called **Borg** since 2003 — managing thousands of servers automatically
+> - These three engineers rebuilt the same ideas as an open-source tool and called it Kubernetes
+> - In 2014, Google **gave it away for free** to the whole world
+>
+> **Why give it away free?**
+> Google's logic: if everyone builds on Kubernetes, everyone eventually needs Google Cloud to run it. Brilliant long-term business strategy disguised as generosity.
+>
+> **The money:**
+> - The three creators left Google and started **Heptio** — a company helping enterprises use Kubernetes
+> - In 2019, **VMware bought Heptio for ~$550 million**
+> - Not billionaires — but hundreds of millions from a tool they gave away for free
+>
+> **The crazy part:** Borg (the system Kubernetes is based on) was built in **2003**. Google was running thousands of servers automatically while the rest of the world was still restarting crashed servers by hand. They were a decade ahead and nobody knew.
+
+---
+
+### 🟡 Q69 — Why did the Render deployment fail with "No open ports detected"?
+
+> 💡 **The app was listening on the wrong door — Render knocked on port 10000, the app answered on 8000.**
+>
+> **What happened:**
+> - Render assigns your app a port via a `PORT` environment variable (usually 10000)
+> - The app had `port=8000` hardcoded
+> - Render scanned for its port, found nothing listening, and killed the deploy
+>
+> **Two-part fix:**
+>
+> **1. `Procfile`** — tells Render exactly how to start the app:
+> ```
+> web: uvicorn main:app --host 0.0.0.0 --port $PORT
+> ```
+>
+> **2. `main.py`** — use the `PORT` env var instead of hardcoding:
+> ```python
+> uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
+> ```
+>
+> **The lesson:** Cloud platforms control which port your app gets. Always read `PORT` from the environment — never hardcode it.
+
+---
+
+### 🟡 Q70 — What is a Procfile and why does it matter?
+
+> 💡 **A one-line instruction card that tells the cloud "here is how to start my app."**
+>
+> Without a Procfile, the cloud platform guesses — and guesses wrong.
+>
+> **Our Procfile:**
+> ```
+> web: uvicorn main:app --host 0.0.0.0 --port $PORT
+> ```
+>
+> Breaking it down:
+> - `web` → this is a web server (as opposed to a background worker)
+> - `uvicorn main:app` → start uvicorn, load the `app` object from `main.py`
+> - `--host 0.0.0.0` → listen on all network interfaces (not just localhost)
+> - `--port $PORT` → use the port Render assigns, not a hardcoded number
+>
+> **Why `0.0.0.0` matters:** If you bind to `127.0.0.1` (localhost), the app only accepts connections from the same machine. On a cloud server, external traffic comes from outside — it needs `0.0.0.0` to be reachable.
+>
+> **Procfile is used by:** Render, Railway, Heroku, and most modern cloud platforms.
