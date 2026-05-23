@@ -210,7 +210,7 @@ def home():
     /* ── HERO ── */
     .hero {
       text-align: center;
-      padding: 80px 24px 60px;
+      padding: 36px 24px 20px;
       max-width: 760px;
       margin: 0 auto;
     }
@@ -219,7 +219,7 @@ def home():
       background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3);
       color: #60a5fa; padding: 6px 14px; border-radius: 100px;
       font-size: 0.78rem; font-weight: 600; letter-spacing: 0.5px;
-      margin-bottom: 28px; text-transform: uppercase;
+      margin-bottom: 16px; text-transform: uppercase;
     }
     .badge-dot { width: 6px; height: 6px; background: #3b82f6; border-radius: 50%; animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
@@ -228,11 +228,11 @@ def home():
       font-weight: 800; line-height: 1.15;
       background: linear-gradient(135deg, #fff 40%, #60a5fa);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text; margin-bottom: 20px; letter-spacing: -1px;
+      background-clip: text; margin-bottom: 12px; letter-spacing: -1px;
     }
     .hero-sub {
       font-size: 1.1rem; color: #94a3b8; line-height: 1.7;
-      max-width: 560px; margin: 0 auto 40px;
+      max-width: 560px; margin: 0 auto 20px;
     }
     .hero-sub strong { color: #e2e8f0; }
 
@@ -240,7 +240,7 @@ def home():
     .pipeline {
       display: flex; align-items: center; justify-content: center;
       flex-wrap: wrap; gap: 6px;
-      margin-bottom: 60px;
+      margin-bottom: 24px;
     }
     .pipe-step {
       background: #0f172a; border: 1px solid #1e293b;
@@ -251,7 +251,7 @@ def home():
     .pipe-arrow { color: #334155; font-size: 0.8rem; }
 
     /* ── DEMO CARD ── */
-    .demo-wrap { padding: 0 24px 80px; max-width: 800px; margin: 0 auto; }
+    .demo-wrap { padding: 0 24px 32px; max-width: 800px; margin: 0 auto; }
     .demo-card {
       background: #0f172a;
       border: 1px solid #1e293b;
@@ -334,18 +334,18 @@ def home():
       border-top: 1px solid #1e293b;
     }
     .stat {
-      background: #0f172a; padding: 20px 24px; text-align: center;
+      background: #0f172a; padding: 14px 24px; text-align: center;
     }
     .stat-value { font-size: 1.6rem; font-weight: 800; color: #3b82f6; }
     .stat-label { font-size: 0.75rem; color: #475569; margin-top: 4px; font-weight: 500; }
 
     /* ── HOW IT WORKS ── */
-    .section { padding: 60px 24px; max-width: 800px; margin: 0 auto; }
+    .section { padding: 28px 24px; max-width: 800px; margin: 0 auto; }
     .section-title {
       font-size: 1.4rem; font-weight: 700; color: #fff;
       margin-bottom: 8px; text-align: center;
     }
-    .section-sub { color: #64748b; text-align: center; margin-bottom: 36px; font-size: 0.9rem; }
+    .section-sub { color: #64748b; text-align: center; margin-bottom: 20px; font-size: 0.9rem; }
     .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
     .step {
       background: #0f172a; border: 1px solid #1e293b;
@@ -370,7 +370,7 @@ def home():
     /* ── FOOTER ── */
     footer {
       border-top: 1px solid #1e293b;
-      padding: 24px 48px;
+      padding: 14px 48px;
       display: flex; justify-content: space-between; align-items: center;
       font-size: 0.82rem; color: #475569;
     }
@@ -379,7 +379,7 @@ def home():
 
     @media (max-width: 600px) {
       nav { padding: 14px 20px; }
-      .hero { padding: 50px 16px 40px; }
+      .hero { padding: 24px 16px 16px; }
       .stats { grid-template-columns: repeat(3, 1fr); }
       footer { flex-direction: column; gap: 8px; text-align: center; }
     }
