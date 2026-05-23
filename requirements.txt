@@ -12,8 +12,6 @@ pyyaml>=6.0,<7.0
 pypdf>=3.0.0,<5.0.0
 python-dotenv>=1.0.0,<2.0.0
 rank-bm25>=0.2.2,<0.3.0
-# MED-11: sentence-transformers required by reranker (swap LLMRerank for local cross-encoder)
-sentence-transformers>=2.2.0,<4.0.0
 ragas>=0.1.0,<0.3.0
 datasets>=2.14.0,<4.0.0
 langchain>=0.1.0,<0.4.0
