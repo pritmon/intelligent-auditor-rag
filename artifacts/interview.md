@@ -12,7 +12,7 @@
 | 🟣 | [History & Inventors](#-history--inventors--q39--q44) | Q39 – Q44 |
 | 🔷 | [MLOps & Production](#-mlops--production--q45--q56) | Q45 – Q56 |
 | 🔴 | [Lessons from the Audit](#-lessons-from-the-audit--q57--q66) | Q57 – Q66 |
-| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q87) | Q67 – Q87 |
+| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q89) | Q67 – Q89 |
 
 ---
 
@@ -914,7 +914,7 @@
 
 ---
 
-## 🟡 Deployment & Infrastructure — Q67 – Q87
+## 🟡 Deployment & Infrastructure — Q67 – Q89
 
 ---
 
@@ -1672,3 +1672,278 @@
 >
 > **Interview answer:**
 > > *"Dev is where you build, UAT is where you verify quality against defined criteria, and Prod is where real users are. I used RAGAS scores as my UAT pass/fail gate — the system only went to production once faithfulness exceeded 0.90."*
+
+---
+
+### 🟡 Q88 — As a developer, what is your approach when building without any AI assistance?
+
+> 💡 **The approach doesn't change — the speed does. The same 8 steps apply with or without AI.**
+>
+> ---
+>
+> **Step 1 — Break the problem into tiny questions**
+>
+> Never ask: *"How do I build a RAG system?"* — too big, no single answer exists.
+>
+> Instead ask one small question at a time:
+> ```
+> How do I read a PDF in Python?
+> How do I split text into chunks?
+> How do I call the OpenAI embeddings API?
+> ```
+> Each small question has a short, findable answer. Big questions don't.
+>
+> ---
+>
+> **Step 2 — Read official documentation first**
+>
+> Every library in this project has excellent docs:
+>
+> | Library | Official Docs |
+> |---|---|
+> | LlamaIndex | docs.llamaindex.ai |
+> | FastAPI | fastapi.tiangolo.com |
+> | OpenAI API | platform.openai.com/docs |
+> | FAISS | github.com/facebookresearch/faiss/wiki |
+>
+> Always read the **"Quickstart"** or **"Getting Started"** page first. It gives you a working example in under 10 minutes.
+>
+> ---
+>
+> **Step 3 — Copy a working example, then modify it**
+>
+> Never start from a blank file. Find the closest working example:
+> ```
+> Search: "llamaindex FAISS vector store example github"
+> → Find a repo that does something similar
+> → Run it first, confirm it works
+> → Then modify it for your needs
+> ```
+> This is how every experienced developer works. Not cheating — it is efficient.
+>
+> ---
+>
+> **Step 4 — Read error messages word by word**
+>
+> Most beginners see a red error and panic. Read it slowly instead:
+> ```
+> KeyError: 'system_prompt'
+> ```
+> → The key `system_prompt` doesn't exist in the loaded YAML → check the file → check spelling
+>
+> **80% of bugs are answered by the error message itself.** The skill is reading it carefully.
+>
+> ---
+>
+> **Step 5 — Stack Overflow + GitHub Issues**
+>
+> When the error message alone isn't enough:
+> 1. Copy the exact error → paste into Google → add the library name
+>    ```
+>    "FAISS IndexFlatL2 dimension mismatch" llamaindex
+>    ```
+> 2. Check **GitHub Issues** of the library — someone else almost certainly hit the same bug
+> 3. Check **Stack Overflow** — filter by the library tag
+>
+> **Trick:** search for the exact error string in quotes. Far more relevant than describing it in your own words.
+>
+> ---
+>
+> **Step 6 — Build the minimum working version first**
+>
+> Before adding hybrid search, reranking, or any complexity — get the simplest possible version working:
+> ```python
+> chunk = "Tesla revenue was $96B in FY2023"
+> response = openai.chat("Answer from this: " + chunk + " Question: What is revenue?")
+> print(response)
+> ```
+> Once that works, add the next layer. Build the skeleton first, add muscles later.
+>
+> ---
+>
+> **Step 7 — Git commit every time something works**
+>
+> ```bash
+> git commit -m "ingester working — splits PDF into chunks"
+> git commit -m "FAISS index builds and saves to disk"
+> git commit -m "retriever returns top 5 chunks for test query"
+> ```
+> If you break something later, you can always go back. Without this, one bad change can wipe out days of working code.
+>
+> ---
+>
+> **Step 8 — Rubber duck debugging when truly stuck**
+>
+> Explain the problem out loud to yourself:
+> > *"The retriever returns chunks but the answer is wrong. The chunks look correct when I print them. The prompt is... wait — I'm sending context_str but I never replaced the placeholder."*
+>
+> The act of explaining forces your brain to re-examine assumptions. This finds bugs faster than any Google search.
+>
+> ---
+>
+> **The honest timeline difference:**
+>
+> | Task | With Claude | Without Claude |
+> |---|---|---|
+> | Write boilerplate files | Instant | 1–2 hours per file |
+> | Explain a bug | 30 seconds | 30–60 minutes on Stack Overflow |
+> | Validate architecture | Instant | Trial and error over days |
+> | Total project time | ~2 weeks | ~6–8 weeks |
+>
+> The **thinking process** is identical. Claude accelerates each step — it doesn't replace the approach.
+>
+> **Interview answer:**
+> > *"Without AI assistance, my approach is: break the problem into small specific questions, read official docs first, find a working example to modify, read errors word by word, use GitHub Issues and Stack Overflow for remaining bugs, build the minimum version first, and commit every working state to git. The fundamentals don't change — just the speed."*
+
+---
+
+### 🟡 Q89 — What is the exact sequence of steps when you sit down and start coding a project?
+
+> 💡 **Structure before logic. Empty files before filled ones. Make it work before making it right.**
+>
+> ---
+>
+> **Step 1 — Create the folder structure first**
+>
+> Before writing any logic, create all folders and empty files:
+> ```bash
+> mkdir intelligent-auditor-rag
+> cd intelligent-auditor-rag
+> mkdir src tests data/raw vector_store prompts artifacts
+>
+> touch src/ingester.py src/indexer.py src/retriever.py
+> touch src/reranker.py src/generator.py
+> touch main.py requirements.txt .env .gitignore
+> ```
+> The project now has shape before one line of logic exists.
+>
+> ---
+>
+> **Step 2 — Write `requirements.txt` before any code**
+>
+> Decide all dependencies upfront:
+> ```
+> llama-index
+> openai
+> fastapi
+> uvicorn
+> pypdf
+> faiss-cpu
+> python-dotenv
+> pyyaml
+> ```
+> Install everything: `pip install -r requirements.txt`
+>
+> **Why first?** If you write code and discover a library conflicts with another, you rewrite. Decide dependencies before writing anything.
+>
+> ---
+>
+> **Step 3 — Test the API key immediately**
+>
+> ```python
+> # test_key.py — delete after use
+> from dotenv import load_dotenv
+> import os, openai
+> load_dotenv()
+> client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+> print(client.models.list())   # if this prints, the key works
+> ```
+> There is no point building anything if the API key doesn't work. Find out in 2 minutes, not 2 days.
+>
+> ---
+>
+> **Step 4 — Write the first real file with a self-test at the bottom**
+>
+> Every file gets an `if __name__ == "__main__"` block so it can be run and tested alone:
+> ```python
+> # src/ingester.py
+> from llama_index.core import SimpleDirectoryReader
+>
+> class Ingester:
+>     def __init__(self, input_dir):
+>         self.input_dir = input_dir
+>
+>     def load_documents(self):
+>         return SimpleDirectoryReader(self.input_dir).load_data()
+>
+> if __name__ == "__main__":
+>     ing = Ingester("data/raw")
+>     docs = ing.load_documents()
+>     print(f"Loaded {len(docs)} pages")
+>     print(docs[0].text[:200])   # print first 200 chars
+> ```
+> Run it: `python3 src/ingester.py`
+> Only move to the next file **after this prints correctly.**
+>
+> ---
+>
+> **Step 5 — Add one function at a time, test after each one**
+>
+> ```python
+> def create_chunks(self, documents):
+>     splitter = SentenceSplitter(chunk_size=512, chunk_overlap=50)
+>     return splitter.get_nodes_from_documents(documents)
+>
+> # Add to the test block:
+> chunks = ing.create_chunks(docs)
+> print(f"Created {len(chunks)} chunks")
+> ```
+> Run again. See the chunks. Then write the next function.
+>
+> ---
+>
+> **Step 6 — Connect files only after both work alone**
+>
+> ```python
+> # small_test.py — temporary connection test
+> from src.ingester import Ingester
+> from src.indexer import Indexer
+>
+> chunks = Ingester("data/raw").create_chunks(Ingester("data/raw").load_documents())
+> index = Indexer("vector_store").create_index(chunks)
+> print("Connected successfully")
+> ```
+> If this crashes — you know exactly which layer broke, because both were tested in isolation first.
+>
+> ---
+>
+> **Step 7 — Test the full pipeline end-to-end before touching FastAPI**
+>
+> ```python
+> # run_pipeline_test.py — run this before writing main.py
+> from src.ingester import Ingester
+> from src.indexer import Indexer
+> from src.retriever import HybridRetriever
+> from src.reranker import Reranker
+> from src.generator import Generator
+>
+> docs = Ingester("data/raw").load_documents()
+> chunks = Ingester("data/raw").create_chunks(docs)
+> index = Indexer("vector_store").create_index(chunks)
+> results = HybridRetriever(index=index, nodes=list(index.docstore.docs.values())).retrieve("What is total revenue?")
+> best = Reranker().rerank("What is total revenue?", results)
+> answer = Generator().generate_response("What is total revenue?", best)
+> print(answer)
+> ```
+> **When this prints a good answer — and only then — write `main.py`.**
+>
+> ---
+>
+> **Step 8 — `main.py` is always written last**
+>
+> FastAPI just wraps the already-working pipeline. It takes 30 minutes because everything underneath already works.
+>
+> ---
+>
+> **The one rule that covers everything:**
+>
+> | Stage | Rule |
+> |---|---|
+> | Make it **work** | Get any output at all — ugly is fine |
+> | Make it **right** | Clean up, add error handling, validate inputs |
+> | Make it **fast** | Optimise only after it is correct |
+>
+> A messy working script beats a beautifully written broken one every time.
+>
+> **Interview answer:**
+> > *"I always start with folder structure and requirements.txt, then test the API key in isolation, then build each pipeline component with a self-test block at the bottom, connecting them only after each works alone. main.py is always the last file I write — it's just a wrapper around an already-working pipeline."*
