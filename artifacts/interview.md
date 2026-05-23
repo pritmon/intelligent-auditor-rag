@@ -12,7 +12,7 @@
 | 🟣 | [History & Inventors](#-history--inventors--q39--q44) | Q39 – Q44 |
 | 🔷 | [MLOps & Production](#-mlops--production--q45--q56) | Q45 – Q56 |
 | 🔴 | [Lessons from the Audit](#-lessons-from-the-audit--q57--q66) | Q57 – Q66 |
-| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q91) | Q67 – Q91 |
+| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q93) | Q67 – Q93 |
 
 ---
 
@@ -914,7 +914,7 @@
 
 ---
 
-## 🟡 Deployment & Infrastructure — Q67 – Q91
+## 🟡 Deployment & Infrastructure — Q67 – Q93
 
 ---
 
@@ -2128,4 +2128,186 @@
 > - Python handles the intelligence (question → RAG pipeline → cited answer)
 >
 > **Interview answer:**
-> > *"UiPath excels at process automation — anything repetitive, rule-based, and involving existing systems like email, SAP, or Excel. It is not designed for AI model building, vector search, or custom algorithms. In this project, UiPath would own the workflow layer while Python owns the intelligence layer — each doing what it is built for."*
+> > *"UiPath excels at process automation — anything repetitive, rule-based, and involving existing systems like email, SAP, or Excel. In this project, UiPath would own the workflow layer while Python owns the intelligence layer — each doing what it is built for."*
+
+---
+
+### 🟡 Q92 — UiPath has evolved with AI — what exact activities replace the Python RAG pipeline?
+
+> 💡 **Three UiPath activities now replace all five Python files in this project.**
+>
+> UiPath's modern AI stack means you no longer need to write Python code for RAG. Here is the exact activity-by-activity mapping:
+>
+> ---
+>
+> **Step 1 — PDF Ingestion**
+> **Package:** `UiPath.PDF.Activities`
+>
+> | Activity | Replaces | What it does |
+> |---|---|---|
+> | `Extract PDF Text` | `ingester.py` | Extracts text from PDF with optional OCR for scanned docs |
+> | `Read PDF Text` | `ingester.py` | Raw page-by-page text extraction |
+> | `Get PDF Page Count` | manual logic | Returns total pages before processing |
+> | `Extract PDF Page Range` | manual logic | Pull specific pages only |
+>
+> ---
+>
+> **Step 2 — Build the RAG Index (replaces FAISS entirely)**
+> **Package:** `UiPath GenAI Activities` (tenant service)
+>
+> | Activity | Replaces | What it does |
+> |---|---|---|
+> | `Update Context Grounding Index` | `ingester.py` + `indexer.py` | Ingests PDFs, chunks text, creates vector embeddings, stores the index — **all in one activity** |
+>
+> > This single activity does the work of chunking, embedding (`text-embedding-3-small`), and building a searchable vector index. You do not write a single line of code.
+>
+> ---
+>
+> **Step 3 — Retrieve Relevant Chunks**
+> **Package:** `UiPath GenAI Activities`
+>
+> | Activity | Replaces | What it does |
+> |---|---|---|
+> | `Context Grounding Search` | `retriever.py` + `reranker.py` | Takes user question, runs cosine similarity search, returns most relevant chunks |
+> | `Get DeepRAG Analysis by ID` | `reranker.py` | Advanced quality analysis of retrieved results |
+>
+> ---
+>
+> **Step 4 — Generate the Answer**
+> **Package:** `UiPath GenAI Activities`
+>
+> | Activity | Replaces | What it does |
+> |---|---|---|
+> | `Content Generation` | `generator.py` | Sends prompt + retrieved chunks → gets a grounded answer |
+> | `Summarize` | `generator.py` | Quick summary of retrieved text |
+> | `Semantic Similarity` | retrieval scoring | Compares meaning between chunks and question |
+>
+> **Supported LLMs inside `Content Generation`:**
+>
+> | Model | Available |
+> |---|---|
+> | OpenAI GPT-4o | ✅ |
+> | Anthropic Claude 3.5 Sonnet | ✅ |
+> | Google Gemini 2.0 Flash | ✅ (US/EU only) |
+>
+> ---
+>
+> **Step 5 — Embeddings (if needed separately)**
+> **Package:** `Azure OpenAI Activities` (via Integration Service)
+>
+> | Activity | Replaces | What it does |
+> |---|---|---|
+> | `Create Embeddings` | embedding logic in `indexer.py` | Converts text to a vector — same as `text-embedding-3-small` in Python |
+> | `Generate Chat Completion` | `generator.py` | Direct GPT-4o chat call |
+>
+> ---
+>
+> **The full workflow in UiPath Studio:**
+>
+> ```
+> [Extract PDF Text]
+>         ↓
+> [Update Context Grounding Index]    ← one-time ingestion (run once)
+>         ↓
+> [UiPath Apps: User types question]
+>         ↓
+> [Context Grounding Search]          ← retrieves top relevant chunks
+>         ↓
+> [Content Generation]                ← GPT-4o / Claude answers from chunks
+>         ↓
+> [UiPath Apps: Display cited answer]
+> ```
+>
+> ---
+>
+> **Python vs UiPath — direct file comparison:**
+>
+> | Python file | UiPath replacement | Lines of code saved |
+> |---|---|---|
+> | `ingester.py` | `Extract PDF Text` + `Update Context Grounding Index` | ~60 lines |
+> | `indexer.py` | Built into `Update Context Grounding Index` | ~50 lines |
+> | `retriever.py` | `Context Grounding Search` | ~80 lines |
+> | `reranker.py` | `Context Grounding Search` (built-in) | ~40 lines |
+> | `generator.py` | `Content Generation` | ~60 lines |
+> | **Total** | **3 activities** | **~290 lines** |
+>
+> ---
+>
+> **External Vector DB (for FAISS-level control)**
+> UiPath supports **Bring Your Own Vector Database (BYOVD):**
+> - Azure AI Search
+> - Databricks Vector Search
+> - Custom via API Workflow
+>
+> **Interview answer:**
+> > *"UiPath's `Update Context Grounding Index` handles PDF ingestion, chunking, and vector indexing in one activity. `Context Grounding Search` replaces the retriever and reranker. `Content Generation` calls GPT-4o or Claude with the retrieved chunks. Three activities replace five Python files and ~290 lines of code."*
+
+---
+
+### 🟡 Q93 — How does UiPath Context Grounding actually work under the hood?
+
+> 💡 **It is the same RAG concept as the Python project — but packaged into a managed cloud service. You configure it, UiPath runs it.**
+>
+> ---
+>
+> **What happens inside `Update Context Grounding Index`:**
+>
+> ```
+> Your PDF file
+>       ↓
+> UiPath splits it into overlapping chunks
+>       ↓
+> Each chunk is sent to an embedding model
+>       ↓
+> Chunk text + embedding vector stored in UiPath's managed index
+>       ↓
+> Index is ready to search
+> ```
+>
+> **What happens inside `Context Grounding Search`:**
+>
+> ```
+> User question
+>       ↓
+> Question is converted to an embedding vector
+>       ↓
+> Cosine similarity search against all stored chunk vectors
+>       ↓
+> Top matching chunks returned
+>       ↓
+> Chunks fed into Content Generation as context
+> ```
+>
+> This is **identical** to what `retriever.py` does with FAISS + BM25 + RRF in the Python version — just managed by UiPath instead of running on your server.
+>
+> ---
+>
+> **The key difference vs Python:**
+>
+> | Aspect | Python (this project) | UiPath Context Grounding |
+> |---|---|---|
+> | Where index lives | Your server (`vector_store/` folder) | UiPath cloud (managed) |
+> | Search type | Hybrid: Vector + BM25 + RRF | Vector (cosine similarity) |
+> | Reranker | LLMRerank (custom) | Built-in (black box) |
+> | Control | Full — you tune everything | Limited — UiPath manages it |
+> | Setup effort | High — write all 5 files | Low — 3 drag-and-drop activities |
+> | Cost | OpenAI API costs only | UiPath licence + API costs |
+>
+> ---
+>
+> **Supported file formats for indexing:**
+> `CSV`, `DOCX`, `JPG`, `JSON`, `PDF`, `PNG`, `TXT`, `XLSX`
+>
+> ---
+>
+> **When to choose UiPath Context Grounding vs Python FAISS:**
+>
+> | Choose UiPath if... | Choose Python if... |
+> |---|---|
+> | Your team uses UiPath already | You need full control over retrieval |
+> | Non-technical team maintains it | You want custom BM25 + RRF fusion |
+> | Speed of delivery matters most | You need open-source / no licence cost |
+> | You trust UiPath's managed infra | You want to tune chunk size, overlap |
+>
+> **Interview answer:**
+> > *"UiPath Context Grounding implements the same RAG concept as the Python pipeline — chunk, embed, index, search, generate. The difference is that UiPath manages the infrastructure as a cloud service, while the Python version gives full control over every parameter. For enterprise teams already on UiPath, Context Grounding eliminates weeks of engineering work."*
