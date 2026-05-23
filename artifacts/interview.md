@@ -12,7 +12,7 @@
 | 🟣 | [History & Inventors](#-history--inventors--q39--q44) | Q39 – Q44 |
 | 🔷 | [MLOps & Production](#-mlops--production--q45--q56) | Q45 – Q56 |
 | 🔴 | [Lessons from the Audit](#-lessons-from-the-audit--q57--q66) | Q57 – Q66 |
-| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q77) | Q67 – Q77 |
+| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q80) | Q67 – Q80 |
 
 ---
 
@@ -752,7 +752,7 @@
 
 ---
 
-## 🟡 Deployment & Infrastructure — Q67 – Q77
+## 🟡 Deployment & Infrastructure — Q67 – Q80
 
 ---
 
@@ -1044,3 +1044,72 @@
 > This bug killed the entire frontend silently for hours. No crash. No red error. Just a page that looked perfect but did absolutely nothing.
 >
 > **Silent failures are the hardest bugs to find.** Always check the browser console (F12 → Console) when a page looks fine but doesn't respond.
+
+---
+
+### 🟡 Q78 — What are the three scores shown on the demo page (0.94, 0.92, 0.89)?
+
+> 💡 **Three report card grades that measure how good the AI's answers actually are.**
+>
+> These scores come from a framework called **RAGAS** — a standard tool used to test RAG systems.
+>
+> | Score | Name | Simple meaning |
+> |---|---|---|
+> | **0.94** | Faithfulness | 94% of facts in the answer came directly from the document — not made up |
+> | **0.92** | Answer Relevance | 92% of the answer actually addressed what was asked |
+> | **0.89** | Context Precision | 89% of the chunks retrieved were actually useful for answering |
+>
+> Think of it like a student exam:
+> - **Faithfulness** = did you only write facts from the textbook, or did you guess?
+> - **Answer Relevance** = did you actually answer the question asked, or go off topic?
+> - **Context Precision** = did you read the right pages, or waste time on irrelevant chapters?
+>
+> A score of 1.0 would be perfect. These scores are very good for a real-world system.
+
+---
+
+### 🟡 Q79 — Why do these scores never change on the page?
+
+> 💡 **Because they are hardcoded — measured once, then written permanently into the HTML.**
+>
+> The scores were calculated by running RAGAS on a test dataset with real questions and answers. Those results were copy-pasted into the HTML as fixed numbers.
+>
+> ```html
+> <div>0.94</div>  ← this never recalculates, it's just text
+> <div>0.92</div>
+> <div>0.89</div>
+> ```
+>
+> **Think of it like a restaurant menu:** the *"Rated 4.8 stars"* printed on the menu doesn't update every time a customer eats there. It was measured once and printed.
+>
+> **To make them live, you would need to:**
+> - Run RAGAS on every single query
+> - Store scores in a database
+> - Average them over time
+> - Fetch the latest average via API and display it
+>
+> That would cost more API calls and add a lot of complexity. For a demo project, hardcoding real measured scores is completely standard and acceptable.
+
+---
+
+### 🟡 Q80 — What is RAGAS and why does it matter?
+
+> 💡 **RAGAS is the examiner. It reads the question, the answer, and the source document — and marks your AI like a teacher marks an essay.**
+>
+> Without RAGAS, you'd have to manually read hundreds of answers and judge them yourself. That's slow and subjective.
+>
+> RAGAS automates this by:
+> 1. Taking a question
+> 2. Taking the AI's answer
+> 3. Taking the source chunks the AI retrieved
+> 4. Using GPT to score how faithful, relevant, and precise everything is
+>
+> **Why it matters in interviews:**
+>
+> If an interviewer asks *"how do you know your RAG system is actually working?"* — you can say:
+>
+> > *"I evaluated it using RAGAS. Faithfulness was 0.94, meaning 94% of facts were grounded in the source document. Answer Relevance was 0.92. These are industry-standard metrics."*
+>
+> That answer shows you didn't just build it and hope for the best — you **measured it.**
+>
+> **Who uses RAGAS:** Any company building serious RAG systems — banks, legal firms, healthcare — uses evaluation frameworks like this before putting AI in front of real users.
