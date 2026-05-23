@@ -450,10 +450,6 @@ def home():
         <button id="askBtn" class="ask-btn" onclick="askQuestion()">Ask →</button>
       </div>
 
-      <div id="responseBox" class="response-box">
-        <div class="response-label">Answer</div>
-        <div id="responseText" class="response-text"></div>
-      </div>
     </div>
 
     <div class="stats">
@@ -470,6 +466,13 @@ def home():
         <div class="stat-label">Context Precision</div>
       </div>
     </div>
+  </div>
+</div>
+
+<div class="demo-wrap">
+  <div id="responseBox" class="response-box">
+    <div class="response-label">Answer</div>
+    <div id="responseText" class="response-text"></div>
   </div>
 </div>
 
@@ -517,8 +520,8 @@ def home():
 
 <script>
   function setQuery(el) {
-    document.getElementById('queryInput').value = el.textContent;
-    document.getElementById('queryInput').focus();
+    document.getElementById('queryInput').value = el.textContent.trim();
+    askQuestion();
   }
 
   async function askQuestion() {
