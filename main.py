@@ -534,15 +534,19 @@ def home():
     btn.disabled = true;
     btn.textContent = 'Thinking…';
     box.style.display = 'block';
-    text.innerHTML = '<span class="spinner"></span>&nbsp; Searching and generating answer…';
+    text.innerHTML = '<span class="spinner"></span>&nbsp; Searching… (first request may take up to 60 seconds on the free server — please wait)';
     box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 90000);
       const res = await fetch('/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query })
+        body: JSON.stringify({ query }),
+        signal: controller.signal
       });
+      clearTimeout(timeout);
 
       const data = await res.json();
 
