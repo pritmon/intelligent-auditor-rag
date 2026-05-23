@@ -12,7 +12,7 @@
 | 🟣 | [History & Inventors](#-history--inventors--q39--q44) | Q39 – Q44 |
 | 🔷 | [MLOps & Production](#-mlops--production--q45--q56) | Q45 – Q56 |
 | 🔴 | [Lessons from the Audit](#-lessons-from-the-audit--q57--q66) | Q57 – Q66 |
-| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q74) | Q67 – Q74 |
+| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q76) | Q67 – Q76 |
 
 ---
 
@@ -935,3 +935,55 @@
 > - **Audit findings are not always real problems** — just because something is *missing* doesn't mean it's *needed*
 > - **Test in production-like conditions** — the fix worked on a laptop with 16GB RAM, failed on a server with 512MB
 > - **The person fixing can also be the person breaking** — auditors, developers, reviewers all make mistakes. No one is above causing a bug while fixing another
+
+---
+
+### 🟡 Q75 — Why did the live demo show "Search index not found"?
+
+> 💡 **The data was on the laptop but never on the server — because git never had it.**
+>
+> When `/ingest` was run locally:
+> - It read `Tesla.pdf` from `data/raw/`
+> - Built the search index
+> - Saved it to `vector_store/` — **on the laptop**
+>
+> When Render deployed:
+> - It got a fresh empty server
+> - Pulled everything from git
+> - `data/raw/` and `vector_store/` were empty — both were in `.gitignore`
+> - So when someone asked a question → *"Search index not found. Please run /ingest first."*
+>
+> | | Laptop | Render Server |
+> |---|---|---|
+> | Tesla.pdf | ✅ Present | ❌ Missing |
+> | Vector store | ✅ Present | ❌ Missing |
+>
+> **The fix:** Remove both folders from `.gitignore` and commit the files to git. Now Render gets the PDF and index on every deploy — no need to run `/ingest` on the server.
+
+---
+
+### 🟡 Q76 — Why were the data files in .gitignore in the first place?
+
+> 💡 **A correct production rule applied blindly to the wrong context.**
+>
+> During the audit, these lines were added to `.gitignore`:
+> ```
+> data/raw/*
+> vector_store/*
+> ```
+>
+> The reasoning was sound for a real production project:
+> - PDFs could be 500MB client documents — too large for git
+> - The vector store is auto-generated — it should be rebuilt fresh from a real database on each deploy
+> - Sensitive client data should never go into a public git repo
+>
+> **But this is a demo project on a free server — not a production system.**
+> - The PDF is only 280KB — tiny
+> - The vector store is only 484KB — tiny
+> - There is no database. There is no persistent storage. Just git.
+>
+> By following the "correct production rule" without thinking about the actual situation, the live demo was silently broken from the start.
+>
+> **The lesson:**
+> > Rules that are correct in one context can be wrong in another. Always ask: *"Does this rule make sense for MY actual situation?"*
+> A junior developer blindly following best practices without understanding why can cause just as much damage as someone who knows no best practices at all.
