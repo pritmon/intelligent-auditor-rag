@@ -12,7 +12,7 @@
 | 🟣 | [History & Inventors](#-history--inventors--q39--q44) | Q39 – Q44 |
 | 🔷 | [MLOps & Production](#-mlops--production--q45--q56) | Q45 – Q56 |
 | 🔴 | [Lessons from the Audit](#-lessons-from-the-audit--q57--q66) | Q57 – Q66 |
-| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q76) | Q67 – Q76 |
+| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q77) | Q67 – Q77 |
 
 ---
 
@@ -987,3 +987,60 @@
 > **The lesson:**
 > > Rules that are correct in one context can be wrong in another. Always ask: *"Does this rule make sense for MY actual situation?"*
 > A junior developer blindly following best practices without understanding why can cause just as much damage as someone who knows no best practices at all.
+
+---
+
+### 🟡 Q77 — Why did every single button on the page do absolutely nothing?
+
+> 💡 **One invisible character broke every line of JavaScript on the entire page.**
+>
+> The app is built in Python. The HTML page — including all the JavaScript inside it — is one giant Python string.
+>
+> Inside that string was this line:
+> ```python
+> .replace(/\\n/g, '\n')
+> ```
+>
+> In Python, `'\n'` means an **actual newline character** — like pressing the Enter key.
+>
+> So Python built the HTML and sent this JavaScript to the browser:
+> ```javascript
+> .replace(/\\n/g, '
+> ')
+> ```
+>
+> There is a real Enter key pressed inside a JavaScript string. JavaScript does not allow this. A string using single quotes must start and end on the same line.
+>
+> **What the browser saw:**
+> ```
+> .replace(/\\n/g, '     ← string starts here
+> ')                      ← JavaScript thinks this is a new broken statement
+> ```
+>
+> The moment the browser hit that line, it declared the entire `<script>` block broken and **silently threw it all away.**
+>
+> Every function — `setQuery`, `askQuestion`, everything — was never defined. No error message. No warning. Just silence.
+>
+> Clicking any button → nothing. Clicking any chip → nothing. The whole UI was dead.
+>
+> ---
+>
+> **The fix:**
+>
+> | | Python code | What browser receives |
+> |---|---|---|
+> | ❌ Before | `.replace(/\\n/g, '\n')` | A literal newline inside a JS string = syntax error |
+> | ✅ After | `.replace(/\\\\n/g, '<br/>')` | The text `\n` as two characters = valid JS |
+>
+> ---
+>
+> **The lesson:**
+>
+> When you write JavaScript inside a Python string, **Python processes escape characters first** before the browser ever sees the code.
+>
+> - Python `'\n'` → actual newline (Enter key) → **JS syntax error**
+> - Python `'\\n'` → the two characters `\n` → **valid JS**
+>
+> This bug killed the entire frontend silently for hours. No crash. No red error. Just a page that looked perfect but did absolutely nothing.
+>
+> **Silent failures are the hardest bugs to find.** Always check the browser console (F12 → Console) when a page looks fine but doesn't respond.
