@@ -6,7 +6,8 @@ FROM python:3.11-slim
 # 2. Environment Setup: Prevents Python from creating messy cache files (.pyc).
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV KMP_DUPLICATE_LIB_OK=TRUE
+# CRIT-4: KMP_DUPLICATE_LIB_OK removed — fix the root cause (conflicting OpenMP libs)
+# by ensuring only one OpenMP runtime is present via proper dependency pinning.
 
 # 3. Work Directory: Every command after this runs inside the "/app" folder.
 WORKDIR /app

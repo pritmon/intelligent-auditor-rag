@@ -5,40 +5,53 @@ from ragas.metrics import faithfulness, answer_relevance, context_precision
 from datasets import Dataset
 from dotenv import load_dotenv
 
-# This script evaluates your RAG system's performance using RAGAS.
-# It measures how accurate and honest your AI is.
+# MED-9: template evaluation dataset with generic placeholders.
+# Replace each entry with real Q&A pairs sampled from your actual ingested corpus.
+# Running /ingest first and then manually verifying a handful of answers is the
+# recommended way to build a meaningful evaluation set.
+EVAL_DATA_TEMPLATE = {
+    "question": [
+        "What is the total revenue reported for the period?",
+        "What are the primary risk factors disclosed?",
+        "What is the net income for the most recent fiscal year?",
+    ],
+    "answer": [
+        # Replace with answers produced by your RAG pipeline
+        "PLACEHOLDER: answer from /ask endpoint",
+        "PLACEHOLDER: answer from /ask endpoint",
+        "PLACEHOLDER: answer from /ask endpoint",
+    ],
+    "contexts": [
+        # Replace with the actual retrieved chunks returned by your retriever
+        ["PLACEHOLDER: retrieved context chunk(s)"],
+        ["PLACEHOLDER: retrieved context chunk(s)"],
+        ["PLACEHOLDER: retrieved context chunk(s)"],
+    ],
+    "ground_truth": [
+        # Replace with the correct answers from the source document
+        "PLACEHOLDER: verified ground-truth answer",
+        "PLACEHOLDER: verified ground-truth answer",
+        "PLACEHOLDER: verified ground-truth answer",
+    ],
+}
 
-def run_evaluation():
+
+def run_evaluation(data: dict = None):
     load_dotenv()
-    
-    # Sample evaluation dataset (In a real scenario, you'd use a larger set of Q&A)
-    data_sample = {
-        "question": [
-            "What is the net income of the company?",
-            "Who is the CEO?",
-            "What are the main risks mentioned in the report?"
-        ],
-        "answer": [
-            "The net income was $15.3 billion as per the consolidated statement of operations.",
-            "The CEO is Sundar Pichai.",
-            "The main risks include competition, economic conditions, and regulatory changes."
-        ],
-        "contexts": [
-            ["Net income was $15.3 billion. Operating expenses increased by 10%."],
-            ["Sundar Pichai has served as Chief Executive Officer since 2015."],
-            ["Risk Factors: We face significant competition. Economic downturns may impact revenue. Regulatory scrutiny is increasing."]
-        ],
-        "ground_truth": [
-            "15.3 billion",
-            "Sundar Pichai",
-            "Competition, economy, and regulation."
-        ]
-    }
 
-    dataset = Dataset.from_dict(data_sample)
+    if data is None:
+        data = EVAL_DATA_TEMPLATE
 
-    print("📊 Evaluating RAG Pipeline Accuracy...")
-    
+    # Guard against accidentally running with placeholder data
+    if any("PLACEHOLDER" in v for v in data.get("answer", [])):
+        raise ValueError(
+            "Evaluation dataset still contains placeholder values. "
+            "Replace them with real Q&A pairs derived from your ingested documents."
+        )
+
+    dataset = Dataset.from_dict(data)
+    print("Evaluating RAG pipeline accuracy...")
+
     result = evaluate(
         dataset,
         metrics=[
@@ -48,18 +61,21 @@ def run_evaluation():
         ],
     )
 
-    print("\n✅ Evaluation Results:")
+    print("\nEvaluation results:")
     print(result)
-    
-    # Save results to artifacts
+
     os.makedirs("artifacts", exist_ok=True)
     with open("artifacts/evaluation_report.json", "w") as f:
         json.dump(result, f, indent=4)
-        print("\n📄 Report saved to artifacts/evaluation_report.json")
+    print("\nReport saved to artifacts/evaluation_report.json")
+    return result
+
 
 if __name__ == "__main__":
     try:
         run_evaluation()
+    except ValueError as e:
+        print(f"Configuration error: {e}")
     except Exception as e:
-        print(f"❌ Evaluation failed: {e}")
-        print("Tip: Make sure OPENAI_API_KEY is set and you have 'ragas' and 'datasets' installed.")
+        print(f"Evaluation failed: {e}")
+        print("Tip: make sure OPENAI_API_KEY is set and 'ragas' and 'datasets' are installed.")
