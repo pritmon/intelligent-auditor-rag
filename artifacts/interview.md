@@ -1,7 +1,5 @@
 # 🧠 Intelligent Auditor RAG — Interview Guide
 
-> Plain English answers with real-world analogies. 66 questions across 6 colour-coded sections.
-
 ---
 
 ## 🗂️ Quick Navigation
