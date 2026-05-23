@@ -177,29 +177,35 @@ def home():
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: #060d1f;
       color: #e2e8f0;
-      min-height: 100vh;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
     /* ── NAV ── */
     nav {
+      flex-shrink: 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 18px 48px;
+      padding: 12px 32px;
       border-bottom: 1px solid #1e293b;
-      background: rgba(6,13,31,0.95);
-      position: sticky; top: 0; z-index: 10;
-      backdrop-filter: blur(10px);
+      background: rgba(6,13,31,0.98);
+      z-index: 10;
     }
-    .nav-brand { font-size: 1.1rem; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
+    .nav-brand { font-size: 1rem; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
     .nav-brand span { color: #3b82f6; }
-    .nav-links { display: flex; gap: 12px; }
+    .nav-links { display: flex; gap: 10px; }
     .nav-links a {
-      padding: 7px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 500;
+      padding: 6px 14px; border-radius: 8px; font-size: 0.82rem; font-weight: 500;
       text-decoration: none; transition: all 0.2s;
     }
     .btn-ghost { color: #94a3b8; border: 1px solid #1e293b; }
@@ -207,120 +213,163 @@ def home():
     .btn-primary { background: #3b82f6; color: #fff; border: 1px solid #3b82f6; }
     .btn-primary:hover { background: #2563eb; border-color: #2563eb; }
 
-    /* ── HERO ── */
-    .hero {
-      text-align: center;
-      padding: 36px 24px 20px;
-      max-width: 760px;
-      margin: 0 auto;
+    /* ── MAIN TWO-COLUMN LAYOUT ── */
+    .page-main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 28px;
+      padding: 20px 32px;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* ── LEFT COLUMN ── */
+    .left-col {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 0;
+      overflow: hidden;
     }
     .badge {
       display: inline-flex; align-items: center; gap: 6px;
       background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3);
-      color: #60a5fa; padding: 6px 14px; border-radius: 100px;
-      font-size: 0.78rem; font-weight: 600; letter-spacing: 0.5px;
-      margin-bottom: 16px; text-transform: uppercase;
+      color: #60a5fa; padding: 5px 12px; border-radius: 100px;
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.5px;
+      text-transform: uppercase; width: fit-content;
     }
     .badge-dot { width: 6px; height: 6px; background: #3b82f6; border-radius: 50%; animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
     h1 {
-      font-size: clamp(2.2rem, 5vw, 3.2rem);
+      font-size: clamp(1.6rem, 2.8vw, 2.4rem);
       font-weight: 800; line-height: 1.15;
       background: linear-gradient(135deg, #fff 40%, #60a5fa);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text; margin-bottom: 12px; letter-spacing: -1px;
+      background-clip: text; letter-spacing: -0.5px;
     }
     .hero-sub {
-      font-size: 1.1rem; color: #94a3b8; line-height: 1.7;
-      max-width: 560px; margin: 0 auto 20px;
+      font-size: 0.9rem; color: #94a3b8; line-height: 1.6;
     }
     .hero-sub strong { color: #e2e8f0; }
 
     /* ── PIPELINE ── */
     .pipeline {
-      display: flex; align-items: center; justify-content: center;
-      flex-wrap: wrap; gap: 6px;
-      margin-bottom: 24px;
+      display: flex; align-items: center;
+      flex-wrap: wrap; gap: 5px;
     }
     .pipe-step {
       background: #0f172a; border: 1px solid #1e293b;
-      padding: 6px 12px; border-radius: 8px;
-      font-size: 0.75rem; color: #64748b; font-weight: 500;
+      padding: 4px 10px; border-radius: 6px;
+      font-size: 0.7rem; color: #64748b; font-weight: 500;
     }
     .pipe-step.highlight { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.3); color: #60a5fa; }
-    .pipe-arrow { color: #334155; font-size: 0.8rem; }
+    .pipe-arrow { color: #334155; font-size: 0.75rem; }
 
-    /* ── DEMO CARD ── */
-    .demo-wrap { padding: 0 24px 32px; max-width: 800px; margin: 0 auto; }
+    /* ── HOW IT WORKS (left col) ── */
+    .steps {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      flex: 1; min-height: 0;
+    }
+    .step {
+      background: #0f172a; border: 1px solid #1e293b;
+      border-radius: 12px; padding: 14px;
+    }
+    .step-num {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; color: #60a5fa; font-size: 0.8rem; margin-bottom: 8px;
+    }
+    .step h3 { font-size: 0.82rem; font-weight: 700; color: #e2e8f0; margin-bottom: 4px; }
+    .step p { font-size: 0.75rem; color: #64748b; line-height: 1.5; }
+    .step .tag {
+      display: inline-block; margin-top: 6px;
+      background: #1e293b; color: #60a5fa;
+      padding: 2px 8px; border-radius: 5px; font-size: 0.68rem; font-weight: 600;
+    }
+
+    /* ── RIGHT COLUMN — DEMO CARD ── */
+    .right-col {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
     .demo-card {
+      flex: 1;
       background: #0f172a;
       border: 1px solid #1e293b;
-      border-radius: 20px;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(59,130,246,0.05);
+      border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
     }
     .demo-header {
-      padding: 20px 24px 16px;
+      padding: 14px 20px;
       border-bottom: 1px solid #1e293b;
       display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
     }
-    .demo-title { font-size: 0.85rem; font-weight: 600; color: #94a3b8; }
+    .demo-title { font-size: 0.82rem; font-weight: 600; color: #94a3b8; }
     .demo-status {
       display: flex; align-items: center; gap: 6px;
-      font-size: 0.78rem; color: #4ade80; font-weight: 500;
+      font-size: 0.75rem; color: #4ade80; font-weight: 500;
     }
     .status-dot { width: 7px; height: 7px; background: #4ade80; border-radius: 50%; animation: pulse 2s infinite; }
 
-    .demo-body { padding: 24px; }
+    .demo-body { padding: 16px 20px; flex: 1; display: flex; flex-direction: column; min-height: 0; }
 
     /* chips */
-    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; flex-shrink: 0; }
     .chip {
       background: #1e293b; border: 1px solid #334155;
-      color: #94a3b8; padding: 6px 12px; border-radius: 8px;
-      font-size: 0.78rem; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+      color: #94a3b8; padding: 5px 10px; border-radius: 7px;
+      font-size: 0.74rem; cursor: pointer; transition: all 0.2s; white-space: nowrap;
     }
     .chip:hover { background: rgba(59,130,246,0.15); border-color: #3b82f6; color: #60a5fa; }
 
     /* input row */
-    .input-row { display: flex; gap: 10px; }
+    .input-row { display: flex; gap: 8px; flex-shrink: 0; }
     .query-input {
       flex: 1;
       background: #1e293b; border: 1px solid #334155;
-      color: #e2e8f0; padding: 12px 16px; border-radius: 10px;
-      font-size: 0.95rem; outline: none; transition: border-color 0.2s;
+      color: #e2e8f0; padding: 10px 14px; border-radius: 9px;
+      font-size: 0.88rem; outline: none; transition: border-color 0.2s;
       font-family: inherit;
     }
     .query-input:focus { border-color: #3b82f6; }
     .query-input::placeholder { color: #475569; }
     .ask-btn {
       background: #3b82f6; color: #fff; border: none;
-      padding: 12px 24px; border-radius: 10px;
-      font-size: 0.9rem; font-weight: 600; cursor: pointer;
+      padding: 10px 20px; border-radius: 9px;
+      font-size: 0.86rem; font-weight: 600; cursor: pointer;
       transition: all 0.2s; white-space: nowrap; font-family: inherit;
     }
-    .ask-btn:hover:not(:disabled) { background: #2563eb; transform: translateY(-1px); }
-    .ask-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .ask-btn:hover:not(:disabled) { background: #2563eb; }
+    .ask-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
     /* response */
     .response-box {
-      margin-top: 20px;
+      margin-top: 12px;
       background: #060d1f; border: 1px solid #1e293b;
-      border-radius: 12px; padding: 20px;
-      min-height: 80px;
+      border-radius: 10px; padding: 14px;
       display: none;
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
     }
-    .response-box.visible { display: block; }
     .response-label {
-      font-size: 0.72rem; font-weight: 700; letter-spacing: 1px;
-      text-transform: uppercase; color: #475569; margin-bottom: 12px;
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: #475569; margin-bottom: 8px;
     }
     .response-text {
-      font-size: 0.92rem; color: #cbd5e1; line-height: 1.75;
+      font-size: 0.86rem; color: #cbd5e1; line-height: 1.7;
       white-space: pre-wrap; word-break: break-word;
     }
     .response-text strong { color: #e2e8f0; }
     .spinner {
-      display: inline-block; width: 16px; height: 16px;
+      display: inline-block; width: 14px; height: 14px;
       border: 2px solid #334155; border-top-color: #3b82f6;
       border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle;
     }
@@ -332,56 +381,30 @@ def home():
       display: grid; grid-template-columns: repeat(3, 1fr);
       gap: 1px; background: #1e293b;
       border-top: 1px solid #1e293b;
+      border-radius: 0 0 16px 16px;
+      overflow: hidden;
+      flex-shrink: 0;
     }
-    .stat {
-      background: #0f172a; padding: 14px 24px; text-align: center;
-    }
-    .stat-value { font-size: 1.6rem; font-weight: 800; color: #3b82f6; }
-    .stat-label { font-size: 0.75rem; color: #475569; margin-top: 4px; font-weight: 500; }
-
-    /* ── HOW IT WORKS ── */
-    .section { padding: 28px 24px; max-width: 800px; margin: 0 auto; }
-    .section-title {
-      font-size: 1.4rem; font-weight: 700; color: #fff;
-      margin-bottom: 8px; text-align: center;
-    }
-    .section-sub { color: #64748b; text-align: center; margin-bottom: 20px; font-size: 0.9rem; }
-    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
-    .step {
-      background: #0f172a; border: 1px solid #1e293b;
-      border-radius: 16px; padding: 24px;
-      transition: border-color 0.2s;
-    }
-    .step:hover { border-color: #334155; }
-    .step-num {
-      width: 36px; height: 36px; border-radius: 10px;
-      background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3);
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 800; color: #60a5fa; font-size: 0.9rem; margin-bottom: 14px;
-    }
-    .step h3 { font-size: 0.95rem; font-weight: 700; color: #e2e8f0; margin-bottom: 8px; }
-    .step p { font-size: 0.82rem; color: #64748b; line-height: 1.6; }
-    .step .tag {
-      display: inline-block; margin-top: 12px;
-      background: #1e293b; color: #60a5fa;
-      padding: 3px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 600;
-    }
+    .stat { background: #0f172a; padding: 10px 16px; text-align: center; }
+    .stat-value { font-size: 1.3rem; font-weight: 800; color: #3b82f6; }
+    .stat-label { font-size: 0.68rem; color: #475569; margin-top: 2px; font-weight: 500; }
 
     /* ── FOOTER ── */
     footer {
+      flex-shrink: 0;
       border-top: 1px solid #1e293b;
-      padding: 14px 48px;
+      padding: 10px 32px;
       display: flex; justify-content: space-between; align-items: center;
-      font-size: 0.82rem; color: #475569;
+      font-size: 0.78rem; color: #475569;
     }
     footer a { color: #60a5fa; text-decoration: none; }
     footer a:hover { text-decoration: underline; }
 
-    @media (max-width: 600px) {
-      nav { padding: 14px 20px; }
-      .hero { padding: 24px 16px 16px; }
-      .stats { grid-template-columns: repeat(3, 1fr); }
-      footer { flex-direction: column; gap: 8px; text-align: center; }
+    @media (max-width: 768px) {
+      html, body { overflow: auto; height: auto; }
+      .page-main { grid-template-columns: 1fr; height: auto; overflow: visible; }
+      nav { padding: 10px 16px; }
+      footer { flex-direction: column; gap: 6px; text-align: center; }
     }
   </style>
 </head>
@@ -395,112 +418,108 @@ def home():
   </div>
 </nav>
 
-<div class="hero">
-  <div class="badge"><div class="badge-dot"></div> Live on Render · Tesla 10-K loaded</div>
-  <h1>Ask anything about a financial filing</h1>
-  <p class="hero-sub">
-    Upload any <strong>10-K, 10-Q, or annual report</strong>.
-    Get a precise answer with the <strong>exact page citation</strong> — in under 3 seconds.
-    No guessing. No hallucinations.
-  </p>
+<div class="page-main">
+  <!-- LEFT COLUMN -->
+  <div class="left-col">
+    <div class="badge"><div class="badge-dot"></div> Live · Tesla 10-K loaded</div>
+    <h1>Ask anything about a financial filing</h1>
+    <p class="hero-sub">
+      Upload any <strong>10-K, 10-Q, or annual report</strong>.
+      Get a precise answer with the <strong>exact page citation</strong> — no guessing, no hallucinations.
+    </p>
 
-  <div class="pipeline">
-    <div class="pipe-step highlight">📄 PDF</div>
-    <div class="pipe-arrow">→</div>
-    <div class="pipe-step">Chunks</div>
-    <div class="pipe-arrow">→</div>
-    <div class="pipe-step highlight">FAISS Index</div>
-    <div class="pipe-arrow">→</div>
-    <div class="pipe-step">Vector + BM25</div>
-    <div class="pipe-arrow">→</div>
-    <div class="pipe-step">RRF Fusion</div>
-    <div class="pipe-arrow">→</div>
-    <div class="pipe-step highlight">Reranker</div>
-    <div class="pipe-arrow">→</div>
-    <div class="pipe-step highlight">GPT-4o-mini</div>
-    <div class="pipe-arrow">→</div>
-    <div class="pipe-step">✅ Cited Answer</div>
-  </div>
-</div>
-
-<div class="demo-wrap">
-  <div class="demo-card">
-    <div class="demo-header">
-      <div class="demo-title">Try it live — Tesla Annual Report loaded</div>
-      <div class="demo-status"><div class="status-dot"></div> API online</div>
+    <div class="pipeline">
+      <div class="pipe-step highlight">📄 PDF</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">Chunks</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step highlight">FAISS</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">BM25+RRF</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step highlight">Reranker</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step highlight">GPT-4o-mini</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">✅ Answer</div>
     </div>
 
-    <div class="demo-body">
-      <div class="chips">
-        <div class="chip" onclick="setQuery(this)">What is Tesla total revenue?</div>
-        <div class="chip" onclick="setQuery(this)">What are the main risk factors?</div>
-        <div class="chip" onclick="setQuery(this)">What is Tesla net income?</div>
-        <div class="chip" onclick="setQuery(this)">Who is the CEO of Tesla?</div>
-        <div class="chip" onclick="setQuery(this)">What is Tesla free cash flow?</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Ingest</h3>
+        <p>PDF split into overlapping chunks, each converted to an embedding vector.</p>
+        <span class="tag">LlamaIndex · OpenAI</span>
       </div>
-
-      <div class="input-row">
-        <input
-          id="queryInput"
-          class="query-input"
-          type="text"
-          placeholder="Ask anything about the Tesla annual report..."
-          onkeydown="if(event.key==='Enter') askQuestion()"
-        />
-        <button id="askBtn" class="ask-btn" onclick="askQuestion()">Ask →</button>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Retrieve</h3>
+        <p>Vector search (meaning) + BM25 (keywords), merged with Reciprocal Rank Fusion.</p>
+        <span class="tag">FAISS · BM25 · RRF</span>
       </div>
-
-      <div id="responseBox" class="response-box">
-        <div class="response-label">Answer</div>
-        <div id="responseText" class="response-text"></div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Rerank</h3>
+        <p>LLM picks the 3 most relevant chunks, removing noise before generation.</p>
+        <span class="tag">LLMRerank</span>
       </div>
-
-    </div>
-
-    <div class="stats">
-      <div class="stat">
-        <div class="stat-value">0.94</div>
-        <div class="stat-label">Faithfulness</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value">0.92</div>
-        <div class="stat-label">Answer Relevance</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value">0.89</div>
-        <div class="stat-label">Context Precision</div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Generate</h3>
+        <p>GPT-4o-mini writes a structured answer. Every fact must cite a page number.</p>
+        <span class="tag">GPT-4o-mini · Temp 0</span>
       </div>
     </div>
   </div>
-</div>
 
-<div class="section">
-  <div class="section-title">How it works</div>
-  <div class="section-sub">Four stages turn a raw PDF into a trusted, cited answer</div>
-  <div class="steps">
-    <div class="step">
-      <div class="step-num">1</div>
-      <h3>Ingest</h3>
-      <p>The PDF is split into overlapping chunks. Each chunk is converted into a list of numbers (embedding) that captures its meaning.</p>
-      <span class="tag">LlamaIndex · OpenAI</span>
-    </div>
-    <div class="step">
-      <div class="step-num">2</div>
-      <h3>Retrieve</h3>
-      <p>Two searches run in parallel — vector search finds chunks by meaning, BM25 finds exact keywords. Results are merged using Reciprocal Rank Fusion.</p>
-      <span class="tag">FAISS · BM25 · RRF</span>
-    </div>
-    <div class="step">
-      <div class="step-num">3</div>
-      <h3>Rerank</h3>
-      <p>An LLM reads the top results and picks the 3 most relevant chunks. This removes noise before the answer is generated.</p>
-      <span class="tag">LLMRerank</span>
-    </div>
-    <div class="step">
-      <div class="step-num">4</div>
-      <h3>Generate</h3>
-      <p>GPT-4o-mini reads only the selected chunks and writes a structured answer. Every fact must include a page citation.</p>
-      <span class="tag">GPT-4o-mini · Temperature 0</span>
+  <!-- RIGHT COLUMN -->
+  <div class="right-col">
+    <div class="demo-card">
+      <div class="demo-header">
+        <div class="demo-title">Try it live — Tesla Annual Report loaded</div>
+        <div class="demo-status"><div class="status-dot"></div> API online</div>
+      </div>
+
+      <div class="demo-body">
+        <div class="chips">
+          <div class="chip" onclick="setQuery(this)">What is Tesla total revenue?</div>
+          <div class="chip" onclick="setQuery(this)">What are the main risk factors?</div>
+          <div class="chip" onclick="setQuery(this)">What is Tesla net income?</div>
+          <div class="chip" onclick="setQuery(this)">Who is the CEO of Tesla?</div>
+          <div class="chip" onclick="setQuery(this)">What is Tesla free cash flow?</div>
+        </div>
+
+        <div class="input-row">
+          <input
+            id="queryInput"
+            class="query-input"
+            type="text"
+            placeholder="Ask anything about the Tesla annual report..."
+            onkeydown="if(event.key==='Enter') askQuestion()"
+          />
+          <button id="askBtn" class="ask-btn" onclick="askQuestion()">Ask →</button>
+        </div>
+
+        <div id="responseBox" class="response-box">
+          <div class="response-label">Answer</div>
+          <div id="responseText" class="response-text"></div>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value">0.94</div>
+          <div class="stat-label">Faithfulness</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">0.92</div>
+          <div class="stat-label">Answer Relevance</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">0.89</div>
+          <div class="stat-label">Context Precision</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
