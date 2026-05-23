@@ -269,7 +269,7 @@ def home():
     /* ── HOW IT WORKS (left col) ── */
     .steps {
       display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-      flex: 1; min-height: 0;
+      align-content: start;
     }
     .step {
       background: #0f172a; border: 1px solid #1e293b;
