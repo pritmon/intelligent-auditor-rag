@@ -3,6 +3,8 @@ import asyncio
 import logging
 from fastapi import FastAPI, HTTPException, Depends, Header
 from pydantic import BaseModel, Field
+from pydantic import StringConstraints
+from typing import Annotated
 from dotenv import load_dotenv
 
 # ── CRIT-1: load .env and validate API key BEFORE any LlamaIndex/OpenAI import ──
@@ -78,9 +80,10 @@ async def check_api_key(x_api_key: str = Header(default=None)):
         raise HTTPException(status_code=403, detail="Forbidden")
 
 
-# ── HIGH-1: validate query length; strip_whitespace prevents empty/blank queries ──
+# ── HIGH-1: validate query length; strip_whitespace removes leading/trailing spaces
+#    before the min_length check so blank/whitespace-only queries are rejected. ──
 class QueryRequest(BaseModel):
-    query: str = Field(..., min_length=1, max_length=4096, strip_whitespace=True)
+    query: Annotated[str, StringConstraints(min_length=1, max_length=4096, strip_whitespace=True)]
 
 
 @app.post("/ingest", dependencies=[Depends(check_api_key)])
