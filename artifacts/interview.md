@@ -12,7 +12,7 @@
 | 🟣 | [History & Inventors](#-history--inventors--q39--q44) | Q39 – Q44 |
 | 🔷 | [MLOps & Production](#-mlops--production--q45--q56) | Q45 – Q56 |
 | 🔴 | [Lessons from the Audit](#-lessons-from-the-audit--q57--q66) | Q57 – Q66 |
-| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q89) | Q67 – Q89 |
+| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q91) | Q67 – Q91 |
 
 ---
 
@@ -914,7 +914,7 @@
 
 ---
 
-## 🟡 Deployment & Infrastructure — Q67 – Q89
+## 🟡 Deployment & Infrastructure — Q67 – Q91
 
 ---
 
@@ -1947,3 +1947,185 @@
 >
 > **Interview answer:**
 > > *"I always start with folder structure and requirements.txt, then test the API key in isolation, then build each pipeline component with a self-test block at the bottom, connecting them only after each works alone. main.py is always the last file I write — it's just a wrapper around an already-working pipeline."*
+
+---
+
+### 🟡 Q90 — If you had to build this entire project in UiPath, what would be the approach?
+
+> 💡 **UiPath is an RPA tool — built for automating business processes. This project is a software engineering task. They serve different purposes, but they can work together powerfully.**
+>
+> ---
+>
+> **The honest truth first**
+>
+> UiPath **cannot** do these things natively:
+> - Build a FAISS vector index
+> - Run BM25 keyword search
+> - Perform RRF fusion
+> - Run an LLM reranker
+>
+> These are data science tasks, not automation tasks. Trying to force them into UiPath would be like trying to cook a meal using a washing machine — wrong tool for the job.
+>
+> You have two approaches depending on your situation:
+>
+> ---
+>
+> **Option A — Pure UiPath (when Python is not allowed)**
+>
+> Map every component to a UiPath activity:
+>
+> | Project Component | UiPath Equivalent |
+> |---|---|
+> | PDF reading | **Document Understanding** — extracts text from PDFs using ML |
+> | Text chunking | **String manipulation activities** — split by character count |
+> | Embeddings | **HTTP Request activity** → call OpenAI `/embeddings` API |
+> | Vector storage | **Pinecone REST API** via HTTP Request — external vector DB |
+> | Similarity search | **Pinecone query API** → returns top matching chunks |
+> | GPT answer | **Integration Service** → OpenAI connector → Chat completion |
+> | Frontend | **UiPath Apps** — simple web form for the user |
+> | Scheduling | **Orchestrator** — trigger when new PDF arrives |
+>
+> The workflow in UiPath Studio:
+> ```
+> [Trigger: New PDF in folder]
+>         ↓
+> [Document Understanding: Extract full text]
+>         ↓
+> [For Each chunk of 512 characters]
+>     → [HTTP Request: OpenAI Embeddings API]
+>     → [HTTP Request: Pinecone — store chunk + embedding]
+>         ↓
+> [UiPath Apps: User types a question]
+>         ↓
+> [HTTP Request: Embed the question via OpenAI]
+>         ↓
+> [HTTP Request: Pinecone — find top 5 similar chunks]
+>         ↓
+> [Integration Service: OpenAI Chat — answer from chunks]
+>         ↓
+> [UiPath Apps: Display answer to user]
+> ```
+>
+> **The limitation:** no BM25, no RRF fusion, no reranker. Answer quality will be lower than the Python version. Acceptable for internal automation — not ideal for a product.
+>
+> ---
+>
+> **Option B — Smart Hybrid (recommended for best quality)**
+>
+> Keep Python doing what it does best. Use UiPath for what it does best.
+>
+> ```
+> ┌─────────────────────────┐        ┌──────────────────────────────┐
+> │      UiPath side        │        │       Python side            │
+> │                         │        │                              │
+> │  Watch email inbox      │──────▶ │  FastAPI /ask endpoint       │
+> │  Extract the question   │        │  Full RAG pipeline           │
+> │  Call Python API        │        │  FAISS + BM25 + Reranker     │
+> │  Format the answer      │ ◀───── │  GPT-4o-mini cited answer    │
+> │  Reply to the analyst   │        │                              │
+> │  Log to SharePoint      │        │                              │
+> └─────────────────────────┘        └──────────────────────────────┘
+> ```
+>
+> UiPath becomes the **front-office automation layer:**
+> - Watches an email inbox for analyst questions
+> - Calls the Python `/ask` API with an HTTP Request activity
+> - Formats and sends the answer back to the analyst automatically
+> - Logs every Q&A to SharePoint or Excel
+> - Sends a daily summary report to the manager
+>
+> Python handles the **intelligence** — everything it is already built for.
+>
+> ---
+>
+> **The 5-phase UiPath build approach**
+>
+> **Phase 1 — Design the workflow structure in Studio**
+> ```
+> Main.xaml
+> ├── GetQuestionFromEmail.xaml
+> ├── CallPythonAPI.xaml
+> ├── FormatAnswer.xaml
+> ├── SendReply.xaml
+> └── LogToSharePoint.xaml
+> ```
+>
+> **Phase 2 — Build and test each `.xaml` file alone**
+> - Test `GetQuestionFromEmail` first — hardcode a fake email, confirm it extracts correctly
+> - Test `CallPythonAPI` alone — hardcode a test question, confirm the API returns an answer
+> - Only connect them after both work independently
+>
+> **Phase 3 — Add exception handling**
+> - Email with no question → send "Please include a question in your email"
+> - Python API timeout → send "System unavailable, please try again later"
+> - Always wrap HTTP Request activities in Try/Catch
+>
+> **Phase 4 — Publish to Orchestrator**
+> - Publish the bot from Studio → Orchestrator
+> - Create a time trigger: "Check inbox every 15 minutes"
+> - Store email credentials in **Orchestrator Assets** — never hardcode passwords
+>
+> **Phase 5 — Monitor**
+> - Orchestrator dashboard shows every run: success or failure
+> - Set up an alert if the bot fails 3 times in a row
+>
+> ---
+>
+> **Which option to choose:**
+>
+> | Situation | Best approach |
+> |---|---|
+> | Need full RAG quality (reranker, BM25, RRF) | Python — UiPath cannot match it |
+> | Automate answer delivery via email or Teams | UiPath wrapping the Python API |
+> | Company policy: no Python servers allowed | Pure UiPath + Pinecone REST API |
+> | Enterprise with both platforms | Hybrid — Python for intelligence, UiPath for workflow |
+>
+> ---
+>
+> **The industry pattern:**
+> Use RPA (UiPath) for **process automation** — routing, logging, triggering, replying.
+> Use Python/ML platforms for **intelligence** — searching, ranking, generating answers.
+> They complement each other. They do not replace each other.
+>
+> **Interview answer:**
+> > *"UiPath alone cannot replicate the full RAG pipeline — it has no native vector search or reranker. My approach would be a hybrid: Python handles the AI pipeline via FastAPI, and UiPath automates the business workflow around it — watching emails, calling the API, formatting replies, and logging results to SharePoint. This gives you the best of both tools."*
+
+---
+
+### 🟡 Q91 — What is UiPath good at, and what is it not good at?
+
+> 💡 **UiPath is a hammer. It is excellent for nails. Do not use it to drill a hole.**
+>
+> | UiPath is great at | UiPath is not built for |
+> |---|---|
+> | Reading emails and replying automatically | Building ML models or vector databases |
+> | Filling web forms and clicking buttons | Running complex mathematical algorithms |
+> | Copying data between systems (SAP, Excel, web) | Real-time API servers (FastAPI, Flask) |
+> | Watching folders and triggering workflows | Training or fine-tuning AI models |
+> | Extracting text from PDFs and invoices | Low-latency high-performance computing |
+> | Logging results to SharePoint or databases | Custom vector similarity search |
+> | Scheduling tasks and sending reports | Parallel processing at scale |
+>
+> ---
+>
+> **The simple analogy:**
+>
+> Think of a company processing 500 invoices per day:
+> - A human opens each invoice PDF → reads the amount → types it into SAP → sends a confirmation email
+> - **UiPath replaces the human** doing those repetitive steps — it is faster, never gets tired, never makes typos
+>
+> Now imagine the company also needs to predict which invoices might be fraudulent:
+> - **UiPath cannot do this** — fraud detection needs ML, statistical models, training data
+> - You need Python for that
+>
+> **The smartest architecture combines both:**
+> ```
+> UiPath → collects invoice data → sends to Python ML model → gets fraud score back → UiPath → flags it in SAP
+> ```
+>
+> This is exactly how this project works:
+> - UiPath handles the workflow (email in → answer out)
+> - Python handles the intelligence (question → RAG pipeline → cited answer)
+>
+> **Interview answer:**
+> > *"UiPath excels at process automation — anything repetitive, rule-based, and involving existing systems like email, SAP, or Excel. It is not designed for AI model building, vector search, or custom algorithms. In this project, UiPath would own the workflow layer while Python owns the intelligence layer — each doing what it is built for."*
