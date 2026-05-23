@@ -12,7 +12,7 @@
 | 🟣 | [History & Inventors](#-history--inventors--q39--q44) | Q39 – Q44 |
 | 🔷 | [MLOps & Production](#-mlops--production--q45--q56) | Q45 – Q56 |
 | 🔴 | [Lessons from the Audit](#-lessons-from-the-audit--q57--q66) | Q57 – Q66 |
-| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q93) | Q67 – Q93 |
+| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q94) | Q67 – Q94 |
 
 ---
 
@@ -914,7 +914,7 @@
 
 ---
 
-## 🟡 Deployment & Infrastructure — Q67 – Q93
+## 🟡 Deployment & Infrastructure — Q67 – Q94
 
 ---
 
@@ -2311,3 +2311,98 @@
 >
 > **Interview answer:**
 > > *"UiPath Context Grounding implements the same RAG concept as the Python pipeline — chunk, embed, index, search, generate. The difference is that UiPath manages the infrastructure as a cloud service, while the Python version gives full control over every parameter. For enterprise teams already on UiPath, Context Grounding eliminates weeks of engineering work."*
+
+---
+
+### 🟡 Q94 — What are the advantages and disadvantages of building this project in UiPath vs Python?
+
+> 💡 **Colour guide used below:**
+> - 🔵 = UiPath activity name
+> - 🟢 = Advantage
+> - 🔴 = Disadvantage
+> - 🟡 = Depends on situation
+>
+> ---
+>
+> **Pipeline comparison — activity by activity:**
+>
+> | Stage | 🐍 Python | 🤖 UiPath Activity | Notes |
+> |---|---|---|---|
+> | PDF reading | `ingester.py` | 🔵 `Extract PDF Text` | UiPath handles OCR too |
+> | Chunking | `ingester.py` | 🔵 `Update Context Grounding Index` | UiPath chunks internally — not configurable |
+> | Embedding | `indexer.py` | 🔵 `Update Context Grounding Index` | Embedding model not exposed |
+> | Vector index | `indexer.py` (FAISS) | 🔵 `Update Context Grounding Index` | UiPath cloud vs local FAISS |
+> | Vector search | `retriever.py` | 🔵 `Context Grounding Search` | Cosine similarity only |
+> | Keyword search | `retriever.py` (BM25) | ❌ Not available | UiPath has no BM25 |
+> | RRF fusion | `retriever.py` | ❌ Not available | UiPath has no hybrid fusion |
+> | Reranker | `reranker.py` | 🔵 `Context Grounding Search` (built-in) | Black box — cannot tune |
+> | Answer generation | `generator.py` | 🔵 `Content Generation` | GPT-4o / Claude / Gemini |
+> | API endpoint | `main.py` (FastAPI) | 🔵 `UiPath Apps` + Orchestrator API | UiPath Apps is simpler but less flexible |
+>
+> ---
+>
+> **Advantages and disadvantages — full table:**
+>
+> | Factor | 🐍 Python | 🤖 UiPath | Winner |
+> |---|---|---|:---:|
+> | 🟢 Build speed | 1–2 weeks | 1 day | 🤖 UiPath |
+> | 🟢 RAG quality (BM25 + RRF + Reranker) | Full control | Black box | 🐍 Python |
+> | 🟢 Infrastructure management | You manage everything | 🔵 Orchestrator manages it | 🤖 UiPath |
+> | 🟢 Enterprise integrations (SAP, Email, SharePoint) | Write from scratch | 🔵 Pre-built connectors | 🤖 UiPath |
+> | 🟢 Non-technical maintenance | Needs Python dev | Visual workflow | 🤖 UiPath |
+> | 🟢 Audit trail & logging | Build yourself | 🔵 Orchestrator built-in | 🤖 UiPath |
+> | 🟢 Cost (infrastructure) | Near zero (open source) | Expensive licence | 🐍 Python |
+> | 🟢 Vendor independence | Runs anywhere | Locked to UiPath cloud | 🐍 Python |
+> | 🟢 Debugging | Line-by-line visibility | Generic black box errors | 🐍 Python |
+> | 🟢 Custom chunk size / overlap | Full control | Not configurable | 🐍 Python |
+> | 🟢 Compliance (SOC2, GDPR, HIPAA) | You certify yourself | 🔵 Already certified | 🤖 UiPath |
+> | 🟢 Scheduling & monitoring | Build with LangSmith | 🔵 Orchestrator triggers | 🤖 UiPath |
+> | 🟡 Scalability | FAISS scales to millions | Limited by licence tier | Depends |
+> | 🟡 Security | You control it | UiPath controls it | Depends |
+>
+> ---
+>
+> **Advantages of doing it in UiPath:**
+>
+> | # | Advantage | Why it matters |
+> |---|---|---|
+> | 1 | 🟢 **Speed** — live in 1 day | 🔵 `Update Context Grounding Index` + 🔵 `Context Grounding Search` + 🔵 `Content Generation` = done |
+> | 2 | 🟢 **No server** | No Render, no Docker, no OOM crashes, no port config — UiPath cloud manages all of it |
+> | 3 | 🟢 **Enterprise-ready** | SOC2, GDPR, HIPAA certified out of the box — critical for banks and insurance |
+> | 4 | 🟢 **Already licensed** | Most large enterprises already pay for UiPath — no new vendor approval |
+> | 5 | 🟢 **Business integrations** | 🔵 `Send Email`, 🔵 `Write to SharePoint`, 🔵 `Update SAP` — all pre-built |
+> | 6 | 🟢 **Visual workflow** | Business analysts can read and modify it — no Python knowledge needed |
+> | 7 | 🟢 **Audit logs free** | 🔵 Orchestrator logs every run, every question, every answer automatically |
+>
+> ---
+>
+> **Disadvantages of doing it in UiPath:**
+>
+> | # | Disadvantage | Impact |
+> |---|---|---|
+> | 1 | 🔴 **No BM25 search** | Miss exact keyword matches — "Section 404", "EBITDA" — lower precision |
+> | 2 | 🔴 **No RRF fusion** | Cannot combine vector + keyword results — quality lower than Python hybrid |
+> | 3 | 🔴 **No custom reranker** | 🔵 `Context Grounding Search` ranks results internally — you cannot override |
+> | 4 | 🔴 **Chunk size not configurable** | Cannot tune 512 chars / 50 overlap — UiPath decides |
+> | 5 | 🔴 **Expensive** | Enterprise UiPath licence = thousands per year. Python = $0 infrastructure |
+> | 6 | 🔴 **Vendor lock-in** | If UiPath changes 🔵 `Context Grounding` pricing — you are stuck |
+> | 7 | 🔴 **Black box debugging** | Generic error message vs Python's exact line number and stack trace |
+> | 8 | 🔴 **Newer feature** | 🔵 Context Grounding launched recently — less community support vs FAISS (2019) |
+>
+> ---
+>
+> **When to choose each:**
+>
+> | Situation | Best choice |
+> |---|---|
+> | 🏦 Regulated industry (bank, insurance, pharma) | 🤖 UiPath — compliance already handled |
+> | 🚀 Startup or research project | 🐍 Python — full control, zero infra cost |
+> | 👥 Team has no Python developers | 🤖 UiPath — RPA team can maintain it |
+> | 💰 Budget is the main constraint | 🐍 Python — near zero cost |
+> | 🎯 Need highest RAG quality | 🐍 Python — BM25 + RRF + LLMRerank |
+> | ⏱ Need to go live this week | 🤖 UiPath — 3 activities, no setup |
+> | 📄 Millions of documents | 🐍 Python — FAISS scales better |
+> | 🔗 Need SAP/SharePoint/email integration | 🤖 UiPath — pre-built connectors |
+>
+> **Interview answer:**
+> > *"UiPath wins on speed, enterprise compliance, and maintainability — three activities replace five Python files and the infrastructure manages itself. Python wins on quality, cost, and control — BM25 hybrid search, custom reranker, and configurable chunking give measurably better answers. For a regulated enterprise that needs to go live fast, UiPath. For a product where answer quality is the top priority, Python."*
