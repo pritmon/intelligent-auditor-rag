@@ -12,7 +12,7 @@
 | 🟣 | [History & Inventors](#-history--inventors--q39--q44) | Q39 – Q44 |
 | 🔷 | [MLOps & Production](#-mlops--production--q45--q56) | Q45 – Q56 |
 | 🔴 | [Lessons from the Audit](#-lessons-from-the-audit--q57--q66) | Q57 – Q66 |
-| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q80) | Q67 – Q80 |
+| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q83) | Q67 – Q83 |
 
 ---
 
@@ -914,7 +914,7 @@
 
 ---
 
-## 🟡 Deployment & Infrastructure — Q67 – Q80
+## 🟡 Deployment & Infrastructure — Q67 – Q83
 
 ---
 
@@ -1266,3 +1266,113 @@
 > That answer shows you didn't just build it and hope for the best — you **measured it.**
 >
 > **Who uses RAGAS:** Any company building serious RAG systems — banks, legal firms, healthcare — uses evaluation frameworks like this before putting AI in front of real users.
+
+---
+
+### 🟡 Q81 — Who invented RAGAS and why?
+
+> 💡 **Four researchers who got tired of everyone claiming their AI was "better" — with no proof.**
+>
+> By 2023, thousands of companies were building RAG systems — connecting documents to ChatGPT. But nobody had a reliable way to answer one simple question:
+>
+> > *"Is my RAG system actually giving good answers?"*
+>
+> You could read the answers yourself — but that takes hours and is subjective. There was no standard measure.
+>
+> **The inventors:**
+>
+> | Name | Role |
+> |---|---|
+> | **Shahul Es** | Lead researcher |
+> | **Jithin James** | Co-author |
+> | **Luis Espinosa-Anke** | Co-author |
+> | **Steven Schockaert** | Co-author |
+>
+> They published a research paper in **September 2023** called *"RAGAS: Automated Evaluation of Retrieval Augmented Generation"* and open-sourced it on GitHub in **October 2023**.
+>
+> Within months, every serious RAG project in the industry was using it.
+>
+> **The key insight:**
+> > *"We are already using GPT to answer questions. Why not use GPT to mark the answers too?"*
+>
+> Before RAGAS, evaluating AI was mostly gut feeling — *"it seems better."* RAGAS gave you a real number. Reproducible. Comparable. Explainable.
+
+---
+
+### 🟡 Q82 — How does RAGAS actually score answers using GPT?
+
+> 💡 **RAGAS sends your question, answer, and source text to GPT and asks it to play the role of an examiner — three different times, for three different checks.**
+>
+> Here is exactly what happens for each score:
+>
+> ---
+>
+> **1. Faithfulness — "Did the AI only use facts from the source?"**
+>
+> RAGAS sends GPT this prompt:
+> > *"Here are the source paragraphs. Here is the answer. List every factual claim in the answer. For each claim — is it supported by the source? Yes or No."*
+>
+> GPT checks claim by claim.
+> - 10 facts in the answer, 9 supported by source → **Faithfulness = 0.9**
+>
+> ---
+>
+> **2. Answer Relevance — "Did it actually answer what was asked?"**
+>
+> This one works *backwards* — clever trick:
+> 1. RAGAS takes the **answer** (not the question)
+> 2. Asks GPT: *"What question would produce this answer?"*
+> 3. GPT generates 3–5 possible questions
+> 4. Measures how similar those questions are to the original question
+>
+> > Original question: *"What is Tesla's total revenue?"*
+> > GPT generates: *"How much did Tesla earn?"*, *"What were Tesla's sales?"*
+> > These are very similar → **high relevance score** ✅
+>
+> > If GPT generates: *"Who is Tesla's CEO?"* → answer went off topic → **low score** ❌
+>
+> ---
+>
+> **3. Context Precision — "Did we retrieve the right chunks?"**
+>
+> RAGAS takes each retrieved chunk and asks GPT:
+> > *"Given this question and this answer — was this chunk actually useful?"*
+>
+> GPT says yes or no for each chunk.
+> - 5 chunks retrieved, 4 were actually useful → **Context Precision = 0.8**
+>
+> ---
+>
+> **Full picture:**
+>
+> ```
+> Your question + Your answer + Your source chunks
+>                     ↓
+>               Sent to GPT
+>                     ↓
+>     GPT scores faithfulness, relevance, precision
+>                     ↓
+>          RAGAS returns: 0.94, 0.92, 0.89
+> ```
+
+---
+
+### 🟡 Q83 — Why is it smart to use GPT to evaluate GPT?
+
+> 💡 **Because GPT is already good at reading and judging language — the same skill a human evaluator uses. RAGAS just automates that judgment at scale.**
+>
+> Think of it this way:
+>
+> | Approach | Who does the judging | Speed | Scale |
+> |---|---|---|---|
+> | **Manual review** | A human reads every answer | Very slow | Can't scale |
+> | **Rule-based check** | Simple keyword matching | Fast | Misses nuance |
+> | **RAGAS** | GPT reads and judges | Fast | Scales to thousands |
+>
+> The reason this works is that judging language quality is exactly what GPT was trained for. It reads well. It understands context. It can tell when an answer is off-topic or when a fact wasn't in the source.
+>
+> **The limitation:**
+> RAGAS itself uses OpenAI API calls to score your answers — so running RAGAS costs money too. That is why in this project, RAGAS was run **once** on a test dataset, and the scores were hardcoded on the demo page. Not run on every live query.
+>
+> **Interview answer when asked about evaluation:**
+> > *"I used RAGAS — an industry-standard framework that uses GPT to automatically score faithfulness, answer relevance, and context precision. Faithfulness was 0.94, meaning 94% of facts in the answer were directly supported by the source document."*
