@@ -943,7 +943,7 @@
 
 ---
 
-### 🟡 Q68 — Who invented Kubernetes and did they get rich?
+### 🟡 Q68 — Who invented Kubernetes ?
 
 > 💡 **Three Google engineers who gave away their secret — then made $550 million from the services around it.**
 >
