@@ -1984,16 +1984,16 @@
 >
 > Map every component to a UiPath activity:
 >
-> | Project Component | UiPath Equivalent |
-> |---|---|
-> | PDF reading | **Document Understanding** — extracts text from PDFs using ML |
-> | Text chunking | **String manipulation activities** — split by character count |
-> | Embeddings | **HTTP Request activity** → call OpenAI `/embeddings` API |
-> | Vector storage | **Pinecone REST API** via HTTP Request — external vector DB |
-> | Similarity search | **Pinecone query API** → returns top matching chunks |
-> | GPT answer | **Integration Service** → OpenAI connector → Chat completion |
-> | Frontend | **UiPath Apps** — simple web form for the user |
-> | Scheduling | **Orchestrator** — trigger when new PDF arrives |
+> | Project Component | What it means in simple English | UiPath Equivalent |
+> |---|---|---|
+> | PDF reading | Open the PDF and read all the text out of it | **Document Understanding** — extracts text from PDFs using ML |
+> | Text chunking | Cut the big text into small pieces (like cutting a roti into bite-sized pieces) | **String manipulation activities** — split by character count |
+> | Embeddings | Convert each piece of text into 1,536 numbers that represent its meaning (barcode for meaning) | **HTTP Request activity** → call OpenAI `/embeddings` API |
+> | Vector storage | Save all those number-barcodes in a database so you can search them later | **Pinecone REST API** via HTTP Request — external vector DB |
+> | Similarity search | When user asks a question — find the pieces whose numbers are closest to the question's numbers | **Pinecone query API** → returns top matching chunks |
+> | GPT answer | Send the found pieces + question to GPT → GPT reads them and writes the answer | **Integration Service** → OpenAI connector → Chat completion |
+> | Frontend | The web page where the user types the question and sees the answer | **UiPath Apps** — simple web form for the user |
+> | Scheduling | Automatically run the whole process when a new PDF arrives — no human needed | **Orchestrator** — trigger when new PDF arrives |
 >
 > The workflow in UiPath Studio:
 > ```
