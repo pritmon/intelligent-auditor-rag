@@ -1984,7 +1984,7 @@
 >
 > Map every component to a UiPath activity:
 >
-> | Project Component | What it means in simple English | UiPath Equivalent |
+> | Project Component | Purpose | UiPath Equivalent |
 > |---|---|---|
 > | PDF reading | Open the PDF and read all the text out of it | **Document Understanding** — extracts text from PDFs using ML |
 > | Text chunking | Cut the big text into small pieces (like cutting a roti into bite-sized pieces) | **String manipulation activities** — split by character count |
