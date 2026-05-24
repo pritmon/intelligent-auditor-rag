@@ -2418,8 +2418,6 @@
 >
 > > *"UiPath wins on speed, enterprise compliance, and maintainability — three activities replace five Python files and the infrastructure manages itself. Python wins on quality, cost, and control — BM25 hybrid search, custom reranker, and configurable chunking give measurably better answers. For a regulated enterprise that needs to go live fast, UiPath. For a product where answer quality is the top priority, Python."*
 >
-> **Breaking it down in plain English:**
->
 > ---
 >
 > **"UiPath wins on speed, enterprise compliance, and maintainability"**
