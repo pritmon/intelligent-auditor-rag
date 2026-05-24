@@ -8,11 +8,13 @@
 |:---:|---|:---:|
 | 🔵 | [Core RAG Concepts](#-core-rag-concepts--q1--q15) | Q1 – Q15 |
 | 🟢 | [General Technical](#-general-technical--q16--q31) | Q16 – Q31 |
-| 🟠 | [AI Hallucinations](#-ai-hallucinations--q32--q38) | Q32 – Q38 |
+| 🟠 | [AI Hallucinations](#-ai-hallucinations--q32--q38-q84) | Q32 – Q38, Q84 |
 | 🟣 | [History & Inventors](#-history--inventors--q39--q44) | Q39 – Q44 |
-| 🔷 | [MLOps & Production](#-mlops--production--q45--q56) | Q45 – Q56 |
+| 🔷 | [MLOps & Production](#-mlops--production--q45--q56-q78--q83) | Q45 – Q56, Q78 – Q83 |
 | 🔴 | [Lessons from the Audit](#-lessons-from-the-audit--q57--q66) | Q57 – Q66 |
-| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q94) | Q67 – Q94 |
+| 🟡 | [Deployment & Infrastructure](#-deployment--infrastructure--q67--q77) | Q67 – Q77 |
+| 🔶 | [SDLC & Development Approach](#-sdlc--development-approach--q85--q89) | Q85 – Q89 |
+| 🟤 | [UiPath & Enterprise Integration](#-uipath--enterprise-integration--q90--q94) | Q90 – Q94 |
 
 ---
 
@@ -391,7 +393,7 @@
 
 ---
 
-## 🟠 AI Hallucinations — Q32 – Q38
+## 🟠 AI Hallucinations — Q32 – Q38, Q84
 
 ---
 
@@ -489,6 +491,89 @@
 
 ---
 
+### 🟠 Q84 — How does the anti-hallucination actually work in the code? Where is it written?
+
+> 💡 **It lives in one YAML file. Ten words. GPT reads them and obeys.**
+>
+> The anti-hallucination is not a complex algorithm — it is a strict instruction written in plain English inside `prompts/system_prompt.yaml`:
+>
+> ```yaml
+> 4. **No Hallucinations:** Do not use your internal knowledge about
+>    the company; use only the context window.
+> ```
+>
+> That one line travels all the way to GPT every single time a question is asked.
+>
+> ---
+>
+> **The full journey — from YAML file to GPT:**
+>
+> **Step 1 — Load the YAML** (`src/generator.py`)
+> ```python
+> with open("prompts/system_prompt.yaml") as f:
+>     prompt_data = yaml.safe_load(f)
+> self.system_prompt_template = prompt_data.get('system_prompt')
+> ```
+> The whole YAML — rules, structure, instructions — is loaded into memory at startup.
+>
+> **Step 2 — Inject the chunks and the question**
+> ```python
+> full_prompt = (
+>     self.system_prompt_template
+>     .replace("{context_str}", context_str)   # ← 3 PDF chunks go here
+>     .replace("{query_str}", query)            # ← user's question goes here
+> )
+> ```
+> The `{context_str}` placeholder gets replaced with the actual text retrieved from the PDF. The `{query_str}` placeholder gets replaced with what the user typed.
+>
+> **Step 3 — Send to GPT**
+> ```python
+> messages=[
+>     {"role": "system", "content": "You are a precise financial auditor."},
+>     {"role": "user",   "content": full_prompt}
+> ]
+> ```
+> GPT receives: your rules + the 3 PDF chunks + the user's question — all in one message.
+>
+> ---
+>
+> **Analogy — open book exam with strict rules:**
+>
+> Imagine giving a student an exam and saying:
+> > *"You may ONLY write answers from this one page I gave you. If it is not on this page, write 'not available'. Do not use your memory."*
+>
+> That is exactly what the system prompt does. GPT is very good at following instructions — so it stays within the boundary.
+>
+> When the user asked **"Who is the CEO of Tesla?"** and the chunks had no CEO name, GPT said:
+> > *"The provided documents do not contain information regarding the CEO of Tesla."*
+>
+> It did not guess "Elon Musk" — even though it knows that from training. The instruction stopped it.
+>
+> ---
+>
+> **What prevents GPT from cheating?**
+>
+> Nothing technical. There is no lock or filter. It is pure **instruction-following**.
+> GPT is trained to follow system instructions very carefully. The phrase `"use only the context window"` is enough.
+>
+> This is why the **system prompt is the most important file in a RAG system**. A weak prompt = hallucinations. A strict, clear prompt = grounded answers.
+>
+> ---
+>
+> **Summary table:**
+>
+> | Mechanism | What it does | Where it lives |
+> |---|---|---|
+> | `system_prompt.yaml` rule 4 | Tells GPT: only use what I gave you | `prompts/system_prompt.yaml` line 14 |
+> | `{context_str}` placeholder | Injects the 3 retrieved PDF chunks | `src/generator.py` line 46 |
+> | `temperature=0.0` | Turns off creativity — forces factual output | `src/generator.py` line 52 |
+> | Citation rule | Every fact must cite a page number — makes lies harder | `prompts/system_prompt.yaml` rule 2 |
+>
+> **Interview answer:**
+> > *"Anti-hallucination is enforced through the system prompt in `system_prompt.yaml`. GPT is told to answer only from the retrieved chunks — not from its own training knowledge. Combined with temperature 0 and mandatory page citations, this makes it very hard for the model to fabricate facts."*
+
+---
+
 ## 🟣 History & Inventors — Q39 – Q44
 
 ---
@@ -566,7 +651,7 @@
 
 ---
 
-## 🔷 MLOps & Production — Q45 – Q56
+## 🔷 MLOps & Production — Q45 – Q56, Q78 – Q83
 
 ---
 
@@ -745,6 +830,185 @@
 
 ---
 
+### 🔷 Q78 — What are the three scores shown on the demo page (0.94, 0.92, 0.89)?
+
+> 💡 **Three report card grades that measure how good the AI's answers actually are.**
+>
+> These scores come from a framework called **RAGAS** — a standard tool used to test RAG systems.
+>
+> | Score | Name | Simple meaning |
+> |---|---|---|
+> | **0.94** | Faithfulness | 94% of facts in the answer came directly from the document — not made up |
+> | **0.92** | Answer Relevance | 92% of the answer actually addressed what was asked |
+> | **0.89** | Context Precision | 89% of the chunks retrieved were actually useful for answering |
+>
+> Think of it like a student exam:
+> - **Faithfulness** = did you only write facts from the textbook, or did you guess?
+> - **Answer Relevance** = did you actually answer the question asked, or go off topic?
+> - **Context Precision** = did you read the right pages, or waste time on irrelevant chapters?
+>
+> A score of 1.0 would be perfect. These scores are very good for a real-world system.
+
+---
+
+### 🔷 Q79 — Why do these scores never change on the page?
+
+> 💡 **Because they are hardcoded — measured once, then written permanently into the HTML.**
+>
+> The scores were calculated by running RAGAS on a test dataset with real questions and answers. Those results were copy-pasted into the HTML as fixed numbers.
+>
+> ```html
+> <div>0.94</div>  ← this never recalculates, it's just text
+> <div>0.92</div>
+> <div>0.89</div>
+> ```
+>
+> **Think of it like a restaurant menu:** the *"Rated 4.8 stars"* printed on the menu doesn't update every time a customer eats there. It was measured once and printed.
+>
+> **To make them live, you would need to:**
+> - Run RAGAS on every single query
+> - Store scores in a database
+> - Average them over time
+> - Fetch the latest average via API and display it
+>
+> That would cost more API calls and add a lot of complexity. For a demo project, hardcoding real measured scores is completely standard and acceptable.
+
+---
+
+### 🔷 Q80 — What is RAGAS and why does it matter?
+
+> 💡 **RAGAS is the examiner. It reads the question, the answer, and the source document — and marks your AI like a teacher marks an essay.**
+>
+> Without RAGAS, you'd have to manually read hundreds of answers and judge them yourself. That's slow and subjective.
+>
+> RAGAS automates this by:
+> 1. Taking a question
+> 2. Taking the AI's answer
+> 3. Taking the source chunks the AI retrieved
+> 4. Using GPT to score how faithful, relevant, and precise everything is
+>
+> **Why it matters in interviews:**
+>
+> If an interviewer asks *"how do you know your RAG system is actually working?"* — you can say:
+>
+> > *"I evaluated it using RAGAS. Faithfulness was 0.94, meaning 94% of facts were grounded in the source document. Answer Relevance was 0.92. These are industry-standard metrics."*
+>
+> That answer shows you didn't just build it and hope for the best — you **measured it.**
+>
+> **Who uses RAGAS:** Any company building serious RAG systems — banks, legal firms, healthcare — uses evaluation frameworks like this before putting AI in front of real users.
+
+---
+
+### 🔷 Q81 — Who invented RAGAS and why?
+
+> 💡 **Four researchers who got tired of everyone claiming their AI was "better" — with no proof.**
+>
+> By 2023, thousands of companies were building RAG systems — connecting documents to ChatGPT. But nobody had a reliable way to answer one simple question:
+>
+> > *"Is my RAG system actually giving good answers?"*
+>
+> You could read the answers yourself — but that takes hours and is subjective. There was no standard measure.
+>
+> **The inventors:**
+>
+> | Name | Role |
+> |---|---|
+> | **Shahul Es** | Lead researcher |
+> | **Jithin James** | Co-author |
+> | **Luis Espinosa-Anke** | Co-author |
+> | **Steven Schockaert** | Co-author |
+>
+> They published a research paper in **September 2023** called *"RAGAS: Automated Evaluation of Retrieval Augmented Generation"* and open-sourced it on GitHub in **October 2023**.
+>
+> Within months, every serious RAG project in the industry was using it.
+>
+> **The key insight:**
+> > *"We are already using GPT to answer questions. Why not use GPT to mark the answers too?"*
+>
+> Before RAGAS, evaluating AI was mostly gut feeling — *"it seems better."* RAGAS gave you a real number. Reproducible. Comparable. Explainable.
+
+---
+
+### 🔷 Q82 — How does RAGAS actually score answers using GPT?
+
+> 💡 **RAGAS sends your question, answer, and source text to GPT and asks it to play the role of an examiner — three different times, for three different checks.**
+>
+> Here is exactly what happens for each score:
+>
+> ---
+>
+> **1. Faithfulness — "Did the AI only use facts from the source?"**
+>
+> RAGAS sends GPT this prompt:
+> > *"Here are the source paragraphs. Here is the answer. List every factual claim in the answer. For each claim — is it supported by the source? Yes or No."*
+>
+> GPT checks claim by claim.
+> - 10 facts in the answer, 9 supported by source → **Faithfulness = 0.9**
+>
+> ---
+>
+> **2. Answer Relevance — "Did it actually answer what was asked?"**
+>
+> This one works *backwards* — clever trick:
+> 1. RAGAS takes the **answer** (not the question)
+> 2. Asks GPT: *"What question would produce this answer?"*
+> 3. GPT generates 3–5 possible questions
+> 4. Measures how similar those questions are to the original question
+>
+> > Original question: *"What is Tesla's total revenue?"*
+> > GPT generates: *"How much did Tesla earn?"*, *"What were Tesla's sales?"*
+> > These are very similar → **high relevance score** ✅
+>
+> > If GPT generates: *"Who is Tesla's CEO?"* → answer went off topic → **low score** ❌
+>
+> ---
+>
+> **3. Context Precision — "Did we retrieve the right chunks?"**
+>
+> RAGAS takes each retrieved chunk and asks GPT:
+> > *"Given this question and this answer — was this chunk actually useful?"*
+>
+> GPT says yes or no for each chunk.
+> - 5 chunks retrieved, 4 were actually useful → **Context Precision = 0.8**
+>
+> ---
+>
+> **Full picture:**
+>
+> ```
+> Your question + Your answer + Your source chunks
+>                     ↓
+>               Sent to GPT
+>                     ↓
+>     GPT scores faithfulness, relevance, precision
+>                     ↓
+>          RAGAS returns: 0.94, 0.92, 0.89
+> ```
+
+---
+
+### 🔷 Q83 — Why is it smart to use GPT to evaluate GPT?
+
+> 💡 **Because GPT is already good at reading and judging language — the same skill a human evaluator uses. RAGAS just automates that judgment at scale.**
+>
+> Think of it this way:
+>
+> | Approach | Who does the judging | Speed | Scale |
+> |---|---|---|---|
+> | **Manual review** | A human reads every answer | Very slow | Can't scale |
+> | **Rule-based check** | Simple keyword matching | Fast | Misses nuance |
+> | **RAGAS** | GPT reads and judges | Fast | Scales to thousands |
+>
+> The reason this works is that judging language quality is exactly what GPT was trained for. It reads well. It understands context. It can tell when an answer is off-topic or when a fact wasn't in the source.
+>
+> **The limitation:**
+> RAGAS itself uses OpenAI API calls to score your answers — so running RAGAS costs money too. That is why in this project, RAGAS was run **once** on a test dataset, and the scores were hardcoded on the demo page. Not run on every live query.
+>
+> **Interview answer when asked about evaluation:**
+> > *"I used RAGAS — an industry-standard framework that uses GPT to automatically score faithfulness, answer relevance, and context precision. Faithfulness was 0.94, meaning 94% of facts in the answer were directly supported by the source document."*
+
+---
+
 ## 🔴 Lessons from the Audit — Q57 – Q66
 
 ---
@@ -914,7 +1178,7 @@
 
 ---
 
-## 🟡 Deployment & Infrastructure — Q67 – Q94
+## 🟡 Deployment & Infrastructure — Q67 – Q77
 
 ---
 
@@ -1200,269 +1464,11 @@
 
 ---
 
-### 🟡 Q78 — What are the three scores shown on the demo page (0.94, 0.92, 0.89)?
-
-> 💡 **Three report card grades that measure how good the AI's answers actually are.**
->
-> These scores come from a framework called **RAGAS** — a standard tool used to test RAG systems.
->
-> | Score | Name | Simple meaning |
-> |---|---|---|
-> | **0.94** | Faithfulness | 94% of facts in the answer came directly from the document — not made up |
-> | **0.92** | Answer Relevance | 92% of the answer actually addressed what was asked |
-> | **0.89** | Context Precision | 89% of the chunks retrieved were actually useful for answering |
->
-> Think of it like a student exam:
-> - **Faithfulness** = did you only write facts from the textbook, or did you guess?
-> - **Answer Relevance** = did you actually answer the question asked, or go off topic?
-> - **Context Precision** = did you read the right pages, or waste time on irrelevant chapters?
->
-> A score of 1.0 would be perfect. These scores are very good for a real-world system.
+## 🔶 SDLC & Development Approach — Q85 – Q89
 
 ---
 
-### 🟡 Q79 — Why do these scores never change on the page?
-
-> 💡 **Because they are hardcoded — measured once, then written permanently into the HTML.**
->
-> The scores were calculated by running RAGAS on a test dataset with real questions and answers. Those results were copy-pasted into the HTML as fixed numbers.
->
-> ```html
-> <div>0.94</div>  ← this never recalculates, it's just text
-> <div>0.92</div>
-> <div>0.89</div>
-> ```
->
-> **Think of it like a restaurant menu:** the *"Rated 4.8 stars"* printed on the menu doesn't update every time a customer eats there. It was measured once and printed.
->
-> **To make them live, you would need to:**
-> - Run RAGAS on every single query
-> - Store scores in a database
-> - Average them over time
-> - Fetch the latest average via API and display it
->
-> That would cost more API calls and add a lot of complexity. For a demo project, hardcoding real measured scores is completely standard and acceptable.
-
----
-
-### 🟡 Q80 — What is RAGAS and why does it matter?
-
-> 💡 **RAGAS is the examiner. It reads the question, the answer, and the source document — and marks your AI like a teacher marks an essay.**
->
-> Without RAGAS, you'd have to manually read hundreds of answers and judge them yourself. That's slow and subjective.
->
-> RAGAS automates this by:
-> 1. Taking a question
-> 2. Taking the AI's answer
-> 3. Taking the source chunks the AI retrieved
-> 4. Using GPT to score how faithful, relevant, and precise everything is
->
-> **Why it matters in interviews:**
->
-> If an interviewer asks *"how do you know your RAG system is actually working?"* — you can say:
->
-> > *"I evaluated it using RAGAS. Faithfulness was 0.94, meaning 94% of facts were grounded in the source document. Answer Relevance was 0.92. These are industry-standard metrics."*
->
-> That answer shows you didn't just build it and hope for the best — you **measured it.**
->
-> **Who uses RAGAS:** Any company building serious RAG systems — banks, legal firms, healthcare — uses evaluation frameworks like this before putting AI in front of real users.
-
----
-
-### 🟡 Q81 — Who invented RAGAS and why?
-
-> 💡 **Four researchers who got tired of everyone claiming their AI was "better" — with no proof.**
->
-> By 2023, thousands of companies were building RAG systems — connecting documents to ChatGPT. But nobody had a reliable way to answer one simple question:
->
-> > *"Is my RAG system actually giving good answers?"*
->
-> You could read the answers yourself — but that takes hours and is subjective. There was no standard measure.
->
-> **The inventors:**
->
-> | Name | Role |
-> |---|---|
-> | **Shahul Es** | Lead researcher |
-> | **Jithin James** | Co-author |
-> | **Luis Espinosa-Anke** | Co-author |
-> | **Steven Schockaert** | Co-author |
->
-> They published a research paper in **September 2023** called *"RAGAS: Automated Evaluation of Retrieval Augmented Generation"* and open-sourced it on GitHub in **October 2023**.
->
-> Within months, every serious RAG project in the industry was using it.
->
-> **The key insight:**
-> > *"We are already using GPT to answer questions. Why not use GPT to mark the answers too?"*
->
-> Before RAGAS, evaluating AI was mostly gut feeling — *"it seems better."* RAGAS gave you a real number. Reproducible. Comparable. Explainable.
-
----
-
-### 🟡 Q82 — How does RAGAS actually score answers using GPT?
-
-> 💡 **RAGAS sends your question, answer, and source text to GPT and asks it to play the role of an examiner — three different times, for three different checks.**
->
-> Here is exactly what happens for each score:
->
-> ---
->
-> **1. Faithfulness — "Did the AI only use facts from the source?"**
->
-> RAGAS sends GPT this prompt:
-> > *"Here are the source paragraphs. Here is the answer. List every factual claim in the answer. For each claim — is it supported by the source? Yes or No."*
->
-> GPT checks claim by claim.
-> - 10 facts in the answer, 9 supported by source → **Faithfulness = 0.9**
->
-> ---
->
-> **2. Answer Relevance — "Did it actually answer what was asked?"**
->
-> This one works *backwards* — clever trick:
-> 1. RAGAS takes the **answer** (not the question)
-> 2. Asks GPT: *"What question would produce this answer?"*
-> 3. GPT generates 3–5 possible questions
-> 4. Measures how similar those questions are to the original question
->
-> > Original question: *"What is Tesla's total revenue?"*
-> > GPT generates: *"How much did Tesla earn?"*, *"What were Tesla's sales?"*
-> > These are very similar → **high relevance score** ✅
->
-> > If GPT generates: *"Who is Tesla's CEO?"* → answer went off topic → **low score** ❌
->
-> ---
->
-> **3. Context Precision — "Did we retrieve the right chunks?"**
->
-> RAGAS takes each retrieved chunk and asks GPT:
-> > *"Given this question and this answer — was this chunk actually useful?"*
->
-> GPT says yes or no for each chunk.
-> - 5 chunks retrieved, 4 were actually useful → **Context Precision = 0.8**
->
-> ---
->
-> **Full picture:**
->
-> ```
-> Your question + Your answer + Your source chunks
->                     ↓
->               Sent to GPT
->                     ↓
->     GPT scores faithfulness, relevance, precision
->                     ↓
->          RAGAS returns: 0.94, 0.92, 0.89
-> ```
-
----
-
-### 🟡 Q83 — Why is it smart to use GPT to evaluate GPT?
-
-> 💡 **Because GPT is already good at reading and judging language — the same skill a human evaluator uses. RAGAS just automates that judgment at scale.**
->
-> Think of it this way:
->
-> | Approach | Who does the judging | Speed | Scale |
-> |---|---|---|---|
-> | **Manual review** | A human reads every answer | Very slow | Can't scale |
-> | **Rule-based check** | Simple keyword matching | Fast | Misses nuance |
-> | **RAGAS** | GPT reads and judges | Fast | Scales to thousands |
->
-> The reason this works is that judging language quality is exactly what GPT was trained for. It reads well. It understands context. It can tell when an answer is off-topic or when a fact wasn't in the source.
->
-> **The limitation:**
-> RAGAS itself uses OpenAI API calls to score your answers — so running RAGAS costs money too. That is why in this project, RAGAS was run **once** on a test dataset, and the scores were hardcoded on the demo page. Not run on every live query.
->
-> **Interview answer when asked about evaluation:**
-> > *"I used RAGAS — an industry-standard framework that uses GPT to automatically score faithfulness, answer relevance, and context precision. Faithfulness was 0.94, meaning 94% of facts in the answer were directly supported by the source document."*
-
----
-
-### 🟡 Q84 — How does the anti-hallucination actually work in the code? Where is it written?
-
-> 💡 **It lives in one YAML file. Ten words. GPT reads them and obeys.**
->
-> The anti-hallucination is not a complex algorithm — it is a strict instruction written in plain English inside `prompts/system_prompt.yaml`:
->
-> ```yaml
-> 4. **No Hallucinations:** Do not use your internal knowledge about
->    the company; use only the context window.
-> ```
->
-> That one line travels all the way to GPT every single time a question is asked.
->
-> ---
->
-> **The full journey — from YAML file to GPT:**
->
-> **Step 1 — Load the YAML** (`src/generator.py`)
-> ```python
-> with open("prompts/system_prompt.yaml") as f:
->     prompt_data = yaml.safe_load(f)
-> self.system_prompt_template = prompt_data.get('system_prompt')
-> ```
-> The whole YAML — rules, structure, instructions — is loaded into memory at startup.
->
-> **Step 2 — Inject the chunks and the question**
-> ```python
-> full_prompt = (
->     self.system_prompt_template
->     .replace("{context_str}", context_str)   # ← 3 PDF chunks go here
->     .replace("{query_str}", query)            # ← user's question goes here
-> )
-> ```
-> The `{context_str}` placeholder gets replaced with the actual text retrieved from the PDF. The `{query_str}` placeholder gets replaced with what the user typed.
->
-> **Step 3 — Send to GPT**
-> ```python
-> messages=[
->     {"role": "system", "content": "You are a precise financial auditor."},
->     {"role": "user",   "content": full_prompt}
-> ]
-> ```
-> GPT receives: your rules + the 3 PDF chunks + the user's question — all in one message.
->
-> ---
->
-> **Analogy — open book exam with strict rules:**
->
-> Imagine giving a student an exam and saying:
-> > *"You may ONLY write answers from this one page I gave you. If it is not on this page, write 'not available'. Do not use your memory."*
->
-> That is exactly what the system prompt does. GPT is very good at following instructions — so it stays within the boundary.
->
-> When the user asked **"Who is the CEO of Tesla?"** and the chunks had no CEO name, GPT said:
-> > *"The provided documents do not contain information regarding the CEO of Tesla."*
->
-> It did not guess "Elon Musk" — even though it knows that from training. The instruction stopped it.
->
-> ---
->
-> **What prevents GPT from cheating?**
->
-> Nothing technical. There is no lock or filter. It is pure **instruction-following**.
-> GPT is trained to follow system instructions very carefully. The phrase `"use only the context window"` is enough.
->
-> This is why the **system prompt is the most important file in a RAG system**. A weak prompt = hallucinations. A strict, clear prompt = grounded answers.
->
-> ---
->
-> **Summary table:**
->
-> | Mechanism | What it does | Where it lives |
-> |---|---|---|
-> | `system_prompt.yaml` rule 4 | Tells GPT: only use what I gave you | `prompts/system_prompt.yaml` line 14 |
-> | `{context_str}` placeholder | Injects the 3 retrieved PDF chunks | `src/generator.py` line 46 |
-> | `temperature=0.0` | Turns off creativity — forces factual output | `src/generator.py` line 52 |
-> | Citation rule | Every fact must cite a page number — makes lies harder | `prompts/system_prompt.yaml` rule 2 |
->
-> **Interview answer:**
-> > *"Anti-hallucination is enforced through the system prompt in `system_prompt.yaml`. GPT is told to answer only from the retrieved chunks — not from its own training knowledge. Combined with temperature 0 and mandatory page citations, this makes it very hard for the model to fabricate facts."*
-
----
-
-### 🟡 Q85 — If you had to build this entire project from scratch alone, what is the full approach?
+### 🔶 Q85 — If you had to build this entire project from scratch alone, what is the full approach?
 
 > 💡 **Think of it like building a house — foundation first, walls second, paint last. Never the other way around.**
 >
@@ -1599,7 +1605,7 @@
 
 ---
 
-### 🟡 Q86 — Why do you build the pipeline components in that specific order?
+### 🔶 Q86 — Why do you build the pipeline components in that specific order?
 
 > 💡 **Because each step depends on the output of the previous one — like an assembly line. You cannot package a product that hasn't been made yet.**
 >
@@ -1631,7 +1637,7 @@
 
 ---
 
-### 🟡 Q87 — What is the difference between Dev, UAT, and Prod environments?
+### 🔶 Q87 — What is the difference between Dev, UAT, and Prod environments?
 
 > 💡 **Three separate stages — each with a different purpose and a different audience.**
 >
@@ -1675,7 +1681,7 @@
 
 ---
 
-### 🟡 Q88 — As a developer, what is your approach when building without any AI assistance?
+### 🔶 Q88 — As a developer, what is your approach when building without any AI assistance?
 
 > 💡 **The approach doesn't change — the speed does. The same 8 steps apply with or without AI.**
 >
@@ -1797,7 +1803,7 @@
 
 ---
 
-### 🟡 Q89 — What is the exact sequence of steps when you sit down and start coding a project?
+### 🔶 Q89 — What is the exact sequence of steps when you sit down and start coding a project?
 
 > 💡 **Structure before logic. Empty files before filled ones. Make it work before making it right.**
 >
@@ -1950,7 +1956,11 @@
 
 ---
 
-### 🟡 Q90 — If you had to build this entire project in UiPath, what would be the approach?
+## 🟤 UiPath & Enterprise Integration — Q90 – Q94
+
+---
+
+### 🟤 Q90 — If you had to build this entire project in UiPath, what would be the approach?
 
 > 💡 **UiPath is an RPA tool — built for automating business processes. This project is a software engineering task. They serve different purposes, but they can work together powerfully.**
 >
@@ -2092,7 +2102,7 @@
 
 ---
 
-### 🟡 Q91 — What is UiPath good at, and what is it not good at?
+### 🟤 Q91 — What is UiPath good at, and what is it not good at?
 
 > 💡 **UiPath is a hammer. It is excellent for nails. Do not use it to drill a hole.**
 >
@@ -2132,7 +2142,7 @@
 
 ---
 
-### 🟡 Q92 — UiPath has evolved with AI — what exact activities replace the Python RAG pipeline?
+### 🟤 Q92 — UiPath has evolved with AI — what exact activities replace the Python RAG pipeline?
 
 > 💡 **Three UiPath activities now replace all five Python files in this project.**
 >
@@ -2244,7 +2254,7 @@
 
 ---
 
-### 🟡 Q93 — How does UiPath Context Grounding actually work under the hood?
+### 🟤 Q93 — How does UiPath Context Grounding actually work under the hood?
 
 > 💡 **It is the same RAG concept as the Python project — but packaged into a managed cloud service. You configure it, UiPath runs it.**
 >
@@ -2314,7 +2324,7 @@
 
 ---
 
-### 🟡 Q94 — What are the advantages and disadvantages of building this project in UiPath vs Python?
+### 🟤 Q94 — What are the advantages and disadvantages of building this project in UiPath vs Python?
 
 > 💡 **Colour guide used below:**
 > - 🔵 = UiPath activity name
