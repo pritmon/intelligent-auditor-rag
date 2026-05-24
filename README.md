@@ -282,16 +282,6 @@ docker run -p 8000:8000 --env-file .env intelligent-auditor
 
 ---
 
-## Interview & Learning Guide
-
-A full plain-English guide to every technical concept in this project — 66 questions and answers across 6 colour-coded sections.
-
-[📖 Read the Interview Guide →](artifacts/interview.md)
-
-Covers: RAG concepts, hybrid search, hallucinations, vector databases, MLOps, and lessons from the security audit.
-
----
-
 <div align="center">
 
 Built by **Pritam Mondal**
