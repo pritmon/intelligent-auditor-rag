@@ -1,4 +1,4 @@
-# 🧠 Intelligent Auditor RAG — Interview Guide
+# 🧠 Intelligent Auditor RAG 
 
 ---
 
