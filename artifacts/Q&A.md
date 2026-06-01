@@ -103,11 +103,34 @@
 
 ### 🔵 Q8 — Why use FastAPI instead of a normal Python script?
 
-> 💡 **A script only works on your computer. FastAPI makes it a web service.**
+> 💡 **Think of it like Swiggy — FastAPI is the door between the internet and your Python code.**
 >
-> - A Python script runs locally and can't be called from outside
-> - **FastAPI** creates an endpoint that any website, app, or service can call over the internet
-> - This is how the Auditor becomes a product — not just a script
+> Imagine your RAG system is a chef sitting in a kitchen. The chef is really good — give him a question, he gives back an answer. But the chef has no door. Nobody can reach him from outside.
+>
+> **FastAPI builds that door.**
+>
+> ```
+> You (browser)       FastAPI          Your Python code
+>      |                 |                    |
+>      |-- "What is   -->|                    |
+>      |   revenue?"     |--- calls --------->|
+>      |                 |   ask_auditor()     |
+>      |                 |<-- answer  ---------|
+>      |<-- answer ------|                    |
+> ```
+>
+> - A plain Python script runs only on your laptop — nobody else can reach it
+> - FastAPI creates a **door (called an endpoint)** that any browser, app, or service can knock on over the internet
+> - This is how the Auditor becomes a real product — not just a local script
+>
+> **Why is it called Fast-API?**
+>
+> | Word | Meaning |
+> |---|---|
+> | **API** | A door that lets apps talk to each other |
+> | **Fast** | Handles thousands of people asking questions at the same time without slowing down |
+>
+> **One line:** FastAPI = the door on your Python code that lets the whole internet knock and ask questions.
 
 ---
 
