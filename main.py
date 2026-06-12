@@ -26,6 +26,7 @@ from src.generator import Generator
 from llama_index.core import Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
+from openai import RateLimitError, APIConnectionError, APITimeoutError, APIStatusError
 
 # ── MED-10: ensure artifacts/ exists before FileHandler is created ──
 os.makedirs("artifacts", exist_ok=True)
@@ -129,6 +130,12 @@ async def ingest_documents():
 
         logger.info(f"Successfully indexed {num_chunks} chunks.")
         return {"message": f"Successfully indexed {num_chunks} chunks."}
+    except (RateLimitError, APIConnectionError, APITimeoutError) as e:
+        logger.error(f"OpenAI API unavailable during ingestion: {e}")
+        raise HTTPException(status_code=503, detail="AI service temporarily unavailable. Please try again shortly.")
+    except APIStatusError as e:
+        logger.error(f"OpenAI API error during ingestion (status {e.status_code}): {e}")
+        raise HTTPException(status_code=503, detail="AI service error. Please try again.")
     except Exception as e:
         logger.error(f"Ingestion failed: {e}")
         # ── HIGH-3: return a generic message; detail stays in server logs ──
@@ -160,6 +167,12 @@ async def ask_auditor(request: QueryRequest):
 
         logger.info("Answer generated successfully.")
         return {"query": request.query, "answer": answer}
+    except (RateLimitError, APIConnectionError, APITimeoutError) as e:
+        logger.error(f"OpenAI API unavailable during query processing: {e}")
+        raise HTTPException(status_code=503, detail="AI service temporarily unavailable. Please try again shortly.")
+    except APIStatusError as e:
+        logger.error(f"OpenAI API error during query processing (status {e.status_code}): {e}")
+        raise HTTPException(status_code=503, detail="AI service error. Please try again.")
     except Exception as e:
         logger.error(f"Error during query processing: {e}")
         # ── HIGH-3: keep internal details out of the API response ──

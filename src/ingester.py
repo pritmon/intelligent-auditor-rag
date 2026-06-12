@@ -1,7 +1,10 @@
 import os
+import logging
 from typing import List
 from llama_index.core import SimpleDirectoryReader, Document
 from llama_index.core.node_parser import SentenceSplitter
+
+logger = logging.getLogger(__name__)
 
 
 class Ingester:
@@ -18,8 +21,35 @@ class Ingester:
                 f"Input directory not found: {self.input_dir!r}. "
                 "Create it and add PDF files before running ingestion."
             )
-        reader = SimpleDirectoryReader(input_dir=self.input_dir)
-        return reader.load_data()
+        # Try loading all files at once; if the batch fails (e.g. one corrupt PDF
+        # causes SimpleDirectoryReader to abort) fall back to per-file loading so
+        # that valid documents are still indexed.
+        try:
+            reader = SimpleDirectoryReader(input_dir=self.input_dir)
+            return reader.load_data()
+        except Exception as batch_err:
+            logger.warning(f"Batch load failed ({batch_err}); retrying file-by-file.")
+            return self._load_files_individually()
+
+    def _load_files_individually(self) -> List[Document]:
+        """Load each file separately, skipping files that cannot be parsed."""
+        docs: List[Document] = []
+        for fname in sorted(os.listdir(self.input_dir)):
+            fpath = os.path.join(self.input_dir, fname)
+            if not os.path.isfile(fpath):
+                continue
+            try:
+                file_reader = SimpleDirectoryReader(input_files=[fpath])
+                docs.extend(file_reader.load_data())
+                logger.info(f"Loaded {fname!r}")
+            except Exception as e:
+                logger.warning(f"Skipping {fname!r}: could not parse ({e})")
+        if not docs:
+            raise RuntimeError(
+                f"No documents could be loaded from {self.input_dir!r}. "
+                "Check that the directory contains valid PDF files."
+            )
+        return docs
 
     def create_chunks(self, documents: List[Document]):
         return self.node_parser.get_nodes_from_documents(documents)

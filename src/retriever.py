@@ -1,6 +1,9 @@
 from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.retrievers.bm25 import BM25Retriever
 from typing import List
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class HybridRetriever:
@@ -30,8 +33,12 @@ class HybridRetriever:
         lists, giving high combined scores to documents that appear near the top in
         multiple lists without requiring score normalisation.
         """
-        vector_results = self.vector_retriever.retrieve(query)
-        bm25_results = self.bm25_retriever.retrieve(query)
+        vector_results = self._safe_retrieve(self.vector_retriever, query, "vector")
+        bm25_results = self._safe_retrieve(self.bm25_retriever, query, "bm25")
+
+        if not vector_results and not bm25_results:
+            logger.error("Both vector and BM25 retrievers returned no results.")
+            return []
 
         # MED-6: Reciprocal Rank Fusion — preserves signal from both retrievers
         K = 60  # standard RRF constant; higher K reduces the impact of rank differences
@@ -52,6 +59,14 @@ class HybridRetriever:
 
         sorted_ids = sorted(rrf_scores, key=lambda x: rrf_scores[x], reverse=True)
         return [rrf_nodes[nid] for nid in sorted_ids]
+
+    def _safe_retrieve(self, retriever, query: str, name: str) -> List:
+        """Run a retriever and return an empty list instead of propagating its error."""
+        try:
+            return retriever.retrieve(query)
+        except Exception as e:
+            logger.warning(f"{name} retriever failed ({e}); excluding from fusion.")
+            return []
 
 
 if __name__ == "__main__":

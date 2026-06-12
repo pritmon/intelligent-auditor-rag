@@ -1,6 +1,9 @@
 from llama_index.core.postprocessor import LLMRerank
 from llama_index.core.schema import QueryBundle
 from typing import List
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Reranker:
@@ -20,10 +23,18 @@ class Reranker:
         """Rerank retrieved nodes using LLM-based relevance scoring."""
         if not nodes:
             return nodes
-        # MED-1: call the reranker instead of silently returning a plain slice
-        return self.reranker.postprocess_nodes(
-            nodes, query_bundle=QueryBundle(query_str=query)
-        )
+        try:
+            # MED-1: call the reranker instead of silently returning a plain slice
+            return self.reranker.postprocess_nodes(
+                nodes, query_bundle=QueryBundle(query_str=query)
+            )
+        except Exception as e:
+            # LLMRerank makes internal LLM calls; if the LLM is unavailable fall back
+            # to the top-N candidates by retrieval score so the endpoint still responds.
+            logger.warning(
+                f"LLM reranking failed ({e}); falling back to top-{self.top_n} by retrieval score."
+            )
+            return nodes[: self.top_n]
 
 
 if __name__ == "__main__":

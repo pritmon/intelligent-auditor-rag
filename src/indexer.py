@@ -19,10 +19,14 @@ class Indexer:
         print("--- Creating Search Index ---")
         # Using LlamaIndex default SimpleVectorStore which is very memory efficient for small data
         index = VectorStoreIndex(nodes)
-        
-        # Save the index to a folder so we don't have to rebuild it every time
-        index.storage_context.persist(persist_dir=self.storage_dir)
-        print(f"Index saved to {self.storage_dir}")
+
+        # Persist the index; if disk I/O fails the in-memory index is still returned
+        # so the current request succeeds (subsequent restarts won't reload the index).
+        try:
+            index.storage_context.persist(persist_dir=self.storage_dir)
+            print(f"Index saved to {self.storage_dir}")
+        except OSError as e:
+            print(f"Warning: could not persist index to {self.storage_dir!r}: {e}. Index is in-memory only.")
         return index
 
     def load_index(self):

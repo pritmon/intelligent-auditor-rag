@@ -12,7 +12,9 @@ class Generator:
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
             raise RuntimeError("OPENAI_API_KEY is not set.")
-        self.client = OpenAI(api_key=api_key)
+        # max_retries=3: SDK retries transient errors (429, 5xx, network) with exponential backoff
+        # timeout=60.0: caps each request so a hung connection doesn't stall the endpoint forever
+        self.client = OpenAI(api_key=api_key, max_retries=3, timeout=60.0)
 
         # ── HIGH-8: read model from env so it stays in sync with Settings.llm ──
         self.model = os.environ.get("LLM_MODEL", "gpt-4o-mini")
@@ -49,6 +51,8 @@ class Generator:
             .replace("{query_str}", query)
         )
 
+        # Exceptions (RateLimitError, APIConnectionError, etc.) propagate to the caller
+        # after the SDK exhausts its max_retries backoff; main.py maps them to HTTP 503.
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[
@@ -58,6 +62,8 @@ class Generator:
             temperature=0.0
         )
 
+        if not response.choices:
+            raise RuntimeError("OpenAI returned an empty choices list.")
         return response.choices[0].message.content
 
 
